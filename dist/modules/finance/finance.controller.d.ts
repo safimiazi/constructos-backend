@@ -25,7 +25,22 @@ export declare class FinanceController {
     updateStatus(u: JwtPayload, id: string, dto: {
         status: InvoiceStatus;
     }): Promise<import("./entities/invoice.entity").Invoice>;
+    recordPayment(u: JwtPayload, id: string, dto: any): Promise<import("./entities/journal.entity").InvoicePayment>;
+    getPayments(u: JwtPayload, id: string): Promise<import("./entities/journal.entity").InvoicePayment[]>;
     removeInvoice(u: JwtPayload, id: string): Promise<void>;
+    findCOA(u: JwtPayload): Promise<import("./entities/journal.entity").ChartOfAccount[]>;
+    createCOA(u: JwtPayload, dto: any): Promise<import("./entities/journal.entity").ChartOfAccount>;
+    findJournals(u: JwtPayload, q: any): Promise<{
+        data: import("./entities/journal.entity").JournalEntry[];
+        meta: {
+            page: number;
+            limit: number;
+            total: number;
+            totalPages: number;
+        };
+    }>;
+    createJournal(u: JwtPayload, dto: any): Promise<import("./entities/journal.entity").JournalEntry>;
+    postJournal(u: JwtPayload, id: string): Promise<import("./entities/journal.entity").JournalEntry | null>;
     findBudgets(u: JwtPayload, pid: string): Promise<import("./entities/budget.entity").Budget[]>;
     getBudgetSummary(u: JwtPayload, pid: string): Promise<any>;
     createBudget(u: JwtPayload, dto: any): Promise<import("./entities/budget.entity").Budget>;
@@ -34,4 +49,18 @@ export declare class FinanceController {
     findBankAccounts(u: JwtPayload): Promise<import("./entities/bank-account.entity").BankAccount[]>;
     createBankAccount(u: JwtPayload, dto: any): Promise<import("./entities/bank-account.entity").BankAccount>;
     updateBankAccount(u: JwtPayload, id: string, dto: any): Promise<import("./entities/bank-account.entity").BankAccount | null>;
+    getPL(u: JwtPayload, sd: string, ed: string): Promise<{
+        period: {
+            startDate: string;
+            endDate: string;
+        };
+        totalIncome: number;
+        totalExpense: number;
+        netProfit: number;
+    }>;
+    getCashflow(u: JwtPayload): Promise<{
+        inflow: number;
+        outflow: number;
+        net: number;
+    }>;
 }

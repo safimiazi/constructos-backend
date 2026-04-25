@@ -28,11 +28,17 @@ export class HrController {
   @Get('attendance') findAttendance(@CurrentUser() u: JwtPayload, @Query() q: any) { return this.svc.findAttendance(u.tenantId!, q); }
   @Get('attendance/summary') getAttSummary(@CurrentUser() u: JwtPayload, @Query('month') month: string) { return this.svc.getAttendanceSummary(u.tenantId!, month); }
   @Post('attendance') createAttendance(@CurrentUser() u: JwtPayload, @Body() dto: any) { return this.svc.createAttendance(u.tenantId!, u.sub, dto); }
+  @Post('attendance/clock-in') clockIn(@CurrentUser() u: JwtPayload, @Body() dto: { employeeId: string; location?: string }) { return this.svc.clockIn(u.tenantId!, dto.employeeId, u.sub, dto.location); }
+  @Post('attendance/clock-out') clockOut(@CurrentUser() u: JwtPayload, @Body() dto: { employeeId: string; location?: string }) { return this.svc.clockOut(u.tenantId!, dto.employeeId, dto.location); }
   @Patch('attendance/:id') updateAttendance(@CurrentUser() u: JwtPayload, @Param('id') id: string, @Body() dto: any) { return this.svc.updateAttendance(u.tenantId!, id, dto); }
 
+  // Leave Types
+  @Get('leave-types') findLeaveTypes(@CurrentUser() u: JwtPayload) { return this.svc.findLeaveTypes(u.tenantId!); }
+  @Post('leave-types') createLeaveType(@CurrentUser() u: JwtPayload, @Body() dto: any) { return this.svc.createLeaveType(u.tenantId!, u.sub, dto); }
+  @Patch('leave-types/:id') updateLeaveType(@CurrentUser() u: JwtPayload, @Param('id') id: string, @Body() dto: any) { return this.svc.updateLeaveType(u.tenantId!, id, dto); }
+
   // Leave
-  @Get('leaves') findLeaves(@CurrentUser() u: JwtPayload, @Query() q: any) { return this.svc.findLeaves(u.tenantId!, q); }
-  @Post('leaves') createLeave(@CurrentUser() u: JwtPayload, @Body() dto: any) { return this.svc.createLeave(u.tenantId!, u.sub, dto); }
+  @Get('leaves') findLeaves(@CurrentUser() u: JwtPayload, @Query() q: any) { return this.svc.findLeaves(u.tenantId!, q); }  @Post('leaves') createLeave(@CurrentUser() u: JwtPayload, @Body() dto: any) { return this.svc.createLeave(u.tenantId!, u.sub, dto); }
   @Patch('leaves/:id/approve') approveLeave(@CurrentUser() u: JwtPayload, @Param('id') id: string) { return this.svc.approveLeave(u.tenantId!, id, u.sub); }
   @Patch('leaves/:id/reject') rejectLeave(@CurrentUser() u: JwtPayload, @Param('id') id: string, @Body() dto: { reason: string }) { return this.svc.rejectLeave(u.tenantId!, id, dto.reason); }
 
@@ -40,6 +46,7 @@ export class HrController {
   @Get('payroll/runs') findPayrollRuns(@CurrentUser() u: JwtPayload) { return this.svc.findPayrollRuns(u.tenantId!); }
   @Post('payroll/runs') createPayrollRun(@CurrentUser() u: JwtPayload, @Body() dto: { payPeriod: string }) { return this.svc.createPayrollRun(u.tenantId!, u.sub, dto.payPeriod); }
   @Get('payroll/runs/:id/items') getPayrollItems(@CurrentUser() u: JwtPayload, @Param('id') id: string) { return this.svc.getPayrollItems(u.tenantId!, id); }
+  @Patch('payroll/items/:id') updatePayrollItem(@CurrentUser() u: JwtPayload, @Param('id') id: string, @Body() dto: any) { return this.svc.updatePayrollItem(u.tenantId!, id, dto); }
   @Patch('payroll/runs/:id/approve') approvePayrollRun(@CurrentUser() u: JwtPayload, @Param('id') id: string) { return this.svc.approvePayrollRun(u.tenantId!, id, u.sub); }
 
   // Recruitment

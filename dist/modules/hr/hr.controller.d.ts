@@ -24,7 +24,18 @@ export declare class HrController {
     findAttendance(u: JwtPayload, q: any): Promise<import("./entities/attendance.entity").Attendance[]>;
     getAttSummary(u: JwtPayload, month: string): Promise<any[]>;
     createAttendance(u: JwtPayload, dto: any): Promise<import("./entities/attendance.entity").Attendance>;
+    clockIn(u: JwtPayload, dto: {
+        employeeId: string;
+        location?: string;
+    }): Promise<import("./entities/attendance.entity").Attendance | null>;
+    clockOut(u: JwtPayload, dto: {
+        employeeId: string;
+        location?: string;
+    }): Promise<import("./entities/attendance.entity").Attendance | null>;
     updateAttendance(u: JwtPayload, id: string, dto: any): Promise<import("./entities/attendance.entity").Attendance | null>;
+    findLeaveTypes(u: JwtPayload): Promise<import("./entities/leave-type.entity").LeaveType[]>;
+    createLeaveType(u: JwtPayload, dto: any): Promise<import("./entities/leave-type.entity").LeaveType>;
+    updateLeaveType(u: JwtPayload, id: string, dto: any): Promise<import("./entities/leave-type.entity").LeaveType | null>;
     findLeaves(u: JwtPayload, q: any): Promise<import("./entities/leave.entity").Leave[]>;
     createLeave(u: JwtPayload, dto: any): Promise<import("./entities/leave.entity").Leave>;
     approveLeave(u: JwtPayload, id: string): Promise<import("./entities/leave.entity").Leave | null>;
@@ -36,6 +47,7 @@ export declare class HrController {
         payPeriod: string;
     }): Promise<import("./entities/payroll.entity").PayrollRun | null>;
     getPayrollItems(u: JwtPayload, id: string): Promise<import("./entities/payroll.entity").PayrollItem[]>;
+    updatePayrollItem(u: JwtPayload, id: string, dto: any): Promise<import("./entities/payroll.entity").PayrollItem | null>;
     approvePayrollRun(u: JwtPayload, id: string): Promise<import("./entities/payroll.entity").PayrollRun | null>;
     findJobs(u: JwtPayload): Promise<import("./entities/job-posting.entity").JobPosting[]>;
     createJob(u: JwtPayload, dto: any): Promise<import("./entities/job-posting.entity").JobPosting>;

@@ -45,19 +45,24 @@ const leave_entity_1 = require("./modules/hr/entities/leave.entity");
 const payroll_entity_1 = require("./modules/hr/entities/payroll.entity");
 const department_entity_1 = require("./modules/hr/entities/department.entity");
 const job_posting_entity_1 = require("./modules/hr/entities/job-posting.entity");
+const leave_type_entity_1 = require("./modules/hr/entities/leave-type.entity");
 const invoice_entity_1 = require("./modules/finance/entities/invoice.entity");
 const budget_entity_1 = require("./modules/finance/entities/budget.entity");
 const bank_account_entity_1 = require("./modules/finance/entities/bank-account.entity");
+const journal_entity_1 = require("./modules/finance/entities/journal.entity");
 const vendor_entity_1 = require("./modules/procurement/entities/vendor.entity");
 const purchase_order_entity_1 = require("./modules/procurement/entities/purchase-order.entity");
 const material_request_entity_1 = require("./modules/procurement/entities/material-request.entity");
 const inventory_entity_1 = require("./modules/procurement/entities/inventory.entity");
+const rfq_entity_1 = require("./modules/procurement/entities/rfq.entity");
 const client_entity_1 = require("./modules/crm/entities/client.entity");
 const lead_entity_1 = require("./modules/crm/entities/lead.entity");
+const proposal_entity_1 = require("./modules/crm/entities/proposal.entity");
 const incident_entity_1 = require("./modules/hse/entities/incident.entity");
 const document_entity_1 = require("./modules/documents/entities/document.entity");
 const notification_entity_1 = require("./modules/notifications/entities/notification.entity");
 const audit_log_entity_1 = require("./modules/audit-log/audit-log.entity");
+const announcement_entity_1 = require("./modules/superadmin/entities/announcement.entity");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -77,14 +82,15 @@ exports.AppModule = AppModule = __decorate([
                     entities: [
                         user_entity_1.User, tenant_entity_1.Tenant, plan_entity_1.Plan, subscription_entity_1.Subscription,
                         project_entity_1.Project, task_entity_1.Task, daily_log_entity_1.DailyLog, milestone_entity_1.Milestone, issue_entity_1.Issue,
-                        employee_entity_1.Employee, attendance_entity_1.Attendance, leave_entity_1.Leave, payroll_entity_1.PayrollRun, payroll_entity_1.PayrollItem, department_entity_1.Department, job_posting_entity_1.JobPosting, job_posting_entity_1.Applicant,
-                        invoice_entity_1.Invoice, budget_entity_1.Budget, bank_account_entity_1.BankAccount,
-                        vendor_entity_1.Vendor, purchase_order_entity_1.PurchaseOrder, material_request_entity_1.MaterialRequest, inventory_entity_1.Inventory,
-                        client_entity_1.Client, lead_entity_1.Lead,
+                        employee_entity_1.Employee, attendance_entity_1.Attendance, leave_entity_1.Leave, payroll_entity_1.PayrollRun, payroll_entity_1.PayrollItem, department_entity_1.Department, job_posting_entity_1.JobPosting, job_posting_entity_1.Applicant, leave_type_entity_1.LeaveType,
+                        invoice_entity_1.Invoice, budget_entity_1.Budget, bank_account_entity_1.BankAccount, journal_entity_1.ChartOfAccount, journal_entity_1.JournalEntry, journal_entity_1.InvoicePayment,
+                        vendor_entity_1.Vendor, purchase_order_entity_1.PurchaseOrder, material_request_entity_1.MaterialRequest, inventory_entity_1.Inventory, rfq_entity_1.RFQ, rfq_entity_1.GRN,
+                        client_entity_1.Client, lead_entity_1.Lead, proposal_entity_1.Proposal, proposal_entity_1.Contract,
                         incident_entity_1.Incident,
                         document_entity_1.Document,
                         notification_entity_1.Notification,
                         audit_log_entity_1.AuditLog,
+                        announcement_entity_1.Announcement,
                     ],
                     synchronize: config.get('NODE_ENV') !== 'production',
                     logging: config.get('NODE_ENV') === 'development',

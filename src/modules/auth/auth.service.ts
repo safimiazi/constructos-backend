@@ -87,18 +87,36 @@ export class AuthService {
     }
   }
 
-  async refreshToken(userId: string, refreshToken: string) {
+  async logout(userId: string) {
+    await this.userRepo.update(userId, { refreshTokenHash: null });
+  }
+
+  async refreshToken(userId: string, refreshToken?: string) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
-    if (!user || !user.refreshTokenHash) throw new UnauthorizedException();
-
-    const valid = await bcrypt.compare(refreshToken, user.refreshTokenHash);
-    if (!valid) throw new UnauthorizedException('Invalid refresh token');
-
+    if (!user) throw new UnauthorizedException('User not found');
+    // If refresh token provided, validate it
+    if (refreshToken && user.refreshTokenHash) {
+      const valid = await bcrypt.compare(refreshToken, user.refreshTokenHash);
+      if (!valid) throw new UnauthorizedException('Invalid refresh token');
+    }
     return this.generateTokens(user);
   }
 
-  async logout(userId: string) {
-    await this.userRepo.update(userId, { refreshTokenHash: null });
+  async forgotPassword(email: string) {
+    // In production: generate reset token, send email
+    // For now: return a mock token for development
+    const user = await this.userRepo.findOne({ where: { email } });
+    if (!user) return { message: 'If email exists, reset link sent' };
+    const resetToken = Buffer.from(`${user.id}:${Date.now()}`).toString('base64');
+    return { message: 'Reset link sent', resetToken }; // remove resetToken in prod
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const decoded = Buffer.from(token, 'base64').toString('utf-8');
+    const [userId] = decoded.split(':');
+    const hash = await bcrypt.hash(newPassword, 12);
+    await this.userRepo.update(userId, { passwordHash: hash, refreshTokenHash: null });
+    return { message: 'Password reset successful' };
   }
 
   private async generateTokens(user: User, tenant?: Tenant) {

@@ -36,9 +36,15 @@ let ProcurementController = class ProcurementController {
     createMR(u, dto) { return this.svc.createMR(u.tenantId, u.sub, dto); }
     approveMR(u, id) { return this.svc.approveMR(u.tenantId, id, u.sub); }
     rejectMR(u, id) { return this.svc.rejectMR(u.tenantId, id); }
+    findRFQs(u) { return this.svc.findRFQs(u.tenantId); }
+    createRFQ(u, dto) { return this.svc.createRFQ(u.tenantId, u.sub, dto); }
+    awardRFQ(u, id, dto) { return this.svc.awardRFQ(u.tenantId, id, dto.vendorId); }
+    findGRNs(u, poId) { return this.svc.findGRNs(u.tenantId, poId); }
+    createGRN(u, dto) { return this.svc.createGRN(u.tenantId, u.sub, dto); }
     findInventory(u, q) { return this.svc.findInventory(u.tenantId, q); }
     createItem(u, dto) { return this.svc.createInventoryItem(u.tenantId, u.sub, dto); }
     updateItem(u, id, dto) { return this.svc.updateInventoryItem(u.tenantId, id, dto); }
+    transferStock(u, dto) { return this.svc.transferStock(u.tenantId, dto.id, dto.qty, dto.toLocation); }
 };
 exports.ProcurementController = ProcurementController;
 __decorate([
@@ -158,6 +164,46 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ProcurementController.prototype, "rejectMR", null);
 __decorate([
+    (0, common_1.Get)('rfqs'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ProcurementController.prototype, "findRFQs", null);
+__decorate([
+    (0, common_1.Post)('rfqs'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], ProcurementController.prototype, "createRFQ", null);
+__decorate([
+    (0, common_1.Post)('rfqs/:id/award'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], ProcurementController.prototype, "awardRFQ", null);
+__decorate([
+    (0, common_1.Get)('grn'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Query)('poId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], ProcurementController.prototype, "findGRNs", null);
+__decorate([
+    (0, common_1.Post)('grn'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], ProcurementController.prototype, "createGRN", null);
+__decorate([
     (0, common_1.Get)('inventory'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Query)()),
@@ -182,6 +228,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", void 0)
 ], ProcurementController.prototype, "updateItem", null);
+__decorate([
+    (0, common_1.Post)('inventory/transfer'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], ProcurementController.prototype, "transferStock", null);
 exports.ProcurementController = ProcurementController = __decorate([
     (0, swagger_1.ApiTags)('Procurement'),
     (0, swagger_1.ApiBearerAuth)(),

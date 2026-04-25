@@ -3,12 +3,15 @@ import { Vendor } from './entities/vendor.entity';
 import { PurchaseOrder } from './entities/purchase-order.entity';
 import { MaterialRequest } from './entities/material-request.entity';
 import { Inventory } from './entities/inventory.entity';
+import { RFQ, GRN } from './entities/rfq.entity';
 export declare class ProcurementService {
     private vendorRepo;
     private poRepo;
     private mrRepo;
     private invRepo;
-    constructor(vendorRepo: Repository<Vendor>, poRepo: Repository<PurchaseOrder>, mrRepo: Repository<MaterialRequest>, invRepo: Repository<Inventory>);
+    private rfqRepo;
+    private grnRepo;
+    constructor(vendorRepo: Repository<Vendor>, poRepo: Repository<PurchaseOrder>, mrRepo: Repository<MaterialRequest>, invRepo: Repository<Inventory>, rfqRepo: Repository<RFQ>, grnRepo: Repository<GRN>);
     findVendors(tenantId: string, q: {
         search?: string;
         page?: number;
@@ -60,10 +63,16 @@ export declare class ProcurementService {
     createMR(tenantId: string, userId: string, dto: Partial<MaterialRequest>): Promise<MaterialRequest>;
     approveMR(tenantId: string, id: string, approverId: string): Promise<MaterialRequest | null>;
     rejectMR(tenantId: string, id: string): Promise<MaterialRequest | null>;
+    findRFQs(tenantId: string): Promise<RFQ[]>;
+    createRFQ(tenantId: string, userId: string, dto: Partial<RFQ>): Promise<RFQ>;
+    awardRFQ(tenantId: string, id: string, vendorId: string): Promise<RFQ | null>;
+    findGRNs(tenantId: string, poId?: string): Promise<GRN[]>;
+    createGRN(tenantId: string, userId: string, dto: Partial<GRN>): Promise<GRN>;
     findInventory(tenantId: string, q: {
         search?: string;
         lowStock?: boolean;
     }): Promise<Inventory[]>;
     createInventoryItem(tenantId: string, userId: string, dto: Partial<Inventory>): Promise<Inventory>;
     updateInventoryItem(tenantId: string, id: string, dto: Partial<Inventory>): Promise<Inventory | null>;
+    transferStock(tenantId: string, id: string, qty: number, toLocation: string): Promise<Inventory | null>;
 }

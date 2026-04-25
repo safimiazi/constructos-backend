@@ -9,10 +9,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SuperadminModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
+const jwt_1 = require("@nestjs/jwt");
+const config_1 = require("@nestjs/config");
 const tenant_entity_1 = require("../tenants/entities/tenant.entity");
 const user_entity_1 = require("../users/entities/user.entity");
 const plan_entity_1 = require("../billing/entities/plan.entity");
 const subscription_entity_1 = require("../billing/entities/subscription.entity");
+const announcement_entity_1 = require("./entities/announcement.entity");
 const superadmin_service_1 = require("./superadmin.service");
 const superadmin_controller_1 = require("./superadmin.controller");
 let SuperadminModule = class SuperadminModule {
@@ -20,7 +23,10 @@ let SuperadminModule = class SuperadminModule {
 exports.SuperadminModule = SuperadminModule;
 exports.SuperadminModule = SuperadminModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([tenant_entity_1.Tenant, user_entity_1.User, plan_entity_1.Plan, subscription_entity_1.Subscription])],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([tenant_entity_1.Tenant, user_entity_1.User, plan_entity_1.Plan, subscription_entity_1.Subscription, announcement_entity_1.Announcement]),
+            jwt_1.JwtModule.registerAsync({ imports: [config_1.ConfigModule], inject: [config_1.ConfigService], useFactory: (c) => ({ secret: c.get('JWT_SECRET') }) }),
+        ],
         controllers: [superadmin_controller_1.SuperadminController],
         providers: [superadmin_service_1.SuperadminService],
     })

@@ -41,7 +41,19 @@ export declare class ProcurementController {
     createMR(u: JwtPayload, dto: any): Promise<import("./entities/material-request.entity").MaterialRequest>;
     approveMR(u: JwtPayload, id: string): Promise<import("./entities/material-request.entity").MaterialRequest | null>;
     rejectMR(u: JwtPayload, id: string): Promise<import("./entities/material-request.entity").MaterialRequest | null>;
+    findRFQs(u: JwtPayload): Promise<import("./entities/rfq.entity").RFQ[]>;
+    createRFQ(u: JwtPayload, dto: any): Promise<import("./entities/rfq.entity").RFQ>;
+    awardRFQ(u: JwtPayload, id: string, dto: {
+        vendorId: string;
+    }): Promise<import("./entities/rfq.entity").RFQ | null>;
+    findGRNs(u: JwtPayload, poId?: string): Promise<import("./entities/rfq.entity").GRN[]>;
+    createGRN(u: JwtPayload, dto: any): Promise<import("./entities/rfq.entity").GRN>;
     findInventory(u: JwtPayload, q: any): Promise<import("./entities/inventory.entity").Inventory[]>;
     createItem(u: JwtPayload, dto: any): Promise<import("./entities/inventory.entity").Inventory>;
     updateItem(u: JwtPayload, id: string, dto: any): Promise<import("./entities/inventory.entity").Inventory | null>;
+    transferStock(u: JwtPayload, dto: {
+        id: string;
+        qty: number;
+        toLocation: string;
+    }): Promise<import("./entities/inventory.entity").Inventory | null>;
 }

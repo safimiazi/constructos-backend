@@ -28,7 +28,14 @@ let FinanceController = class FinanceController {
     findInvoice(u, id) { return this.svc.findInvoice(u.tenantId, id); }
     updateInvoice(u, id, dto) { return this.svc.updateInvoice(u.tenantId, id, dto); }
     updateStatus(u, id, dto) { return this.svc.updateStatus(u.tenantId, id, dto.status); }
+    recordPayment(u, id, dto) { return this.svc.recordPayment(u.tenantId, id, u.sub, dto); }
+    getPayments(u, id) { return this.svc.getInvoicePayments(u.tenantId, id); }
     removeInvoice(u, id) { return this.svc.removeInvoice(u.tenantId, id); }
+    findCOA(u) { return this.svc.findCOA(u.tenantId); }
+    createCOA(u, dto) { return this.svc.createCOA(u.tenantId, u.sub, dto); }
+    findJournals(u, q) { return this.svc.findJournals(u.tenantId, q); }
+    createJournal(u, dto) { return this.svc.createJournal(u.tenantId, u.sub, dto); }
+    postJournal(u, id) { return this.svc.postJournal(u.tenantId, id); }
     findBudgets(u, pid) { return this.svc.findBudgets(u.tenantId, pid); }
     getBudgetSummary(u, pid) { return this.svc.getBudgetSummary(u.tenantId, pid); }
     createBudget(u, dto) { return this.svc.createBudget(u.tenantId, u.sub, dto); }
@@ -37,6 +44,8 @@ let FinanceController = class FinanceController {
     findBankAccounts(u) { return this.svc.findBankAccounts(u.tenantId); }
     createBankAccount(u, dto) { return this.svc.createBankAccount(u.tenantId, u.sub, dto); }
     updateBankAccount(u, id, dto) { return this.svc.updateBankAccount(u.tenantId, id, dto); }
+    getPL(u, sd, ed) { return this.svc.getPLReport(u.tenantId, sd, ed); }
+    getCashflow(u) { return this.svc.getCashflowReport(u.tenantId); }
 };
 exports.FinanceController = FinanceController;
 __decorate([
@@ -89,6 +98,23 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], FinanceController.prototype, "updateStatus", null);
 __decorate([
+    (0, common_1.Post)('invoices/:id/payments'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "recordPayment", null);
+__decorate([
+    (0, common_1.Get)('invoices/:id/payments'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "getPayments", null);
+__decorate([
     (0, common_1.Delete)('invoices/:id'),
     (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
@@ -97,6 +123,45 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], FinanceController.prototype, "removeInvoice", null);
+__decorate([
+    (0, common_1.Get)('coa'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "findCOA", null);
+__decorate([
+    (0, common_1.Post)('coa'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "createCOA", null);
+__decorate([
+    (0, common_1.Get)('journal-entries'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "findJournals", null);
+__decorate([
+    (0, common_1.Post)('journal-entries'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "createJournal", null);
+__decorate([
+    (0, common_1.Post)('journal-entries/:id/post'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "postJournal", null);
 __decorate([
     (0, common_1.Get)('budgets/:projectId'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
@@ -163,6 +228,22 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", void 0)
 ], FinanceController.prototype, "updateBankAccount", null);
+__decorate([
+    (0, common_1.Get)('reports/pl'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Query)('startDate')),
+    __param(2, (0, common_1.Query)('endDate')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "getPL", null);
+__decorate([
+    (0, common_1.Get)('reports/cashflow'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "getCashflow", null);
 exports.FinanceController = FinanceController = __decorate([
     (0, swagger_1.ApiTags)('Finance'),
     (0, swagger_1.ApiBearerAuth)(),

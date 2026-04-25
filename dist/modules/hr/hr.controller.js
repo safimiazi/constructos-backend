@@ -34,7 +34,12 @@ let HrController = class HrController {
     findAttendance(u, q) { return this.svc.findAttendance(u.tenantId, q); }
     getAttSummary(u, month) { return this.svc.getAttendanceSummary(u.tenantId, month); }
     createAttendance(u, dto) { return this.svc.createAttendance(u.tenantId, u.sub, dto); }
+    clockIn(u, dto) { return this.svc.clockIn(u.tenantId, dto.employeeId, u.sub, dto.location); }
+    clockOut(u, dto) { return this.svc.clockOut(u.tenantId, dto.employeeId, dto.location); }
     updateAttendance(u, id, dto) { return this.svc.updateAttendance(u.tenantId, id, dto); }
+    findLeaveTypes(u) { return this.svc.findLeaveTypes(u.tenantId); }
+    createLeaveType(u, dto) { return this.svc.createLeaveType(u.tenantId, u.sub, dto); }
+    updateLeaveType(u, id, dto) { return this.svc.updateLeaveType(u.tenantId, id, dto); }
     findLeaves(u, q) { return this.svc.findLeaves(u.tenantId, q); }
     createLeave(u, dto) { return this.svc.createLeave(u.tenantId, u.sub, dto); }
     approveLeave(u, id) { return this.svc.approveLeave(u.tenantId, id, u.sub); }
@@ -42,6 +47,7 @@ let HrController = class HrController {
     findPayrollRuns(u) { return this.svc.findPayrollRuns(u.tenantId); }
     createPayrollRun(u, dto) { return this.svc.createPayrollRun(u.tenantId, u.sub, dto.payPeriod); }
     getPayrollItems(u, id) { return this.svc.getPayrollItems(u.tenantId, id); }
+    updatePayrollItem(u, id, dto) { return this.svc.updatePayrollItem(u.tenantId, id, dto); }
     approvePayrollRun(u, id) { return this.svc.approvePayrollRun(u.tenantId, id, u.sub); }
     findJobs(u) { return this.svc.findJobs(u.tenantId); }
     createJob(u, dto) { return this.svc.createJob(u.tenantId, u.sub, dto); }
@@ -151,6 +157,22 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], HrController.prototype, "createAttendance", null);
 __decorate([
+    (0, common_1.Post)('attendance/clock-in'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], HrController.prototype, "clockIn", null);
+__decorate([
+    (0, common_1.Post)('attendance/clock-out'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], HrController.prototype, "clockOut", null);
+__decorate([
     (0, common_1.Patch)('attendance/:id'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
@@ -159,6 +181,30 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", void 0)
 ], HrController.prototype, "updateAttendance", null);
+__decorate([
+    (0, common_1.Get)('leave-types'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], HrController.prototype, "findLeaveTypes", null);
+__decorate([
+    (0, common_1.Post)('leave-types'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], HrController.prototype, "createLeaveType", null);
+__decorate([
+    (0, common_1.Patch)('leave-types/:id'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], HrController.prototype, "updateLeaveType", null);
 __decorate([
     (0, common_1.Get)('leaves'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
@@ -215,6 +261,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], HrController.prototype, "getPayrollItems", null);
+__decorate([
+    (0, common_1.Patch)('payroll/items/:id'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], HrController.prototype, "updatePayrollItem", null);
 __decorate([
     (0, common_1.Patch)('payroll/runs/:id/approve'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),

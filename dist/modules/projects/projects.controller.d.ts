@@ -8,6 +8,9 @@ export declare class ProjectsController {
         active: number;
         completed: number;
         onHold: number;
+        overdueCount: number;
+        avgCompletion: number;
+        totalBudget: any;
         recentProjects: import("./entities/project.entity").Project[];
     }>;
     findAll(u: JwtPayload, q: any): Promise<{

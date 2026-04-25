@@ -31,6 +31,7 @@ export declare class ProjectsService {
     getTasks(tenantId: string, projectId: string): Promise<Task[]>;
     createTask(tenantId: string, projectId: string, userId: string, dto: Partial<Task>): Promise<Task>;
     updateTask(tenantId: string, taskId: string, dto: Partial<Task>): Promise<Task | null>;
+    private recalcProjectCompletion;
     removeTask(tenantId: string, taskId: string): Promise<void>;
     getLogs(tenantId: string, projectId: string): Promise<DailyLog[]>;
     createLog(tenantId: string, projectId: string, userId: string, dto: Partial<DailyLog>): Promise<DailyLog>;
@@ -48,6 +49,9 @@ export declare class ProjectsService {
         active: number;
         completed: number;
         onHold: number;
+        overdueCount: number;
+        avgCompletion: number;
+        totalBudget: any;
         recentProjects: Project[];
     }>;
 }

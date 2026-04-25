@@ -1,6 +1,7 @@
 import { CrmService } from './crm.service';
 import type { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { LeadStage } from './entities/lead.entity';
+import { ProposalStatus } from './entities/proposal.entity';
 export declare class CrmController {
     private readonly svc;
     constructor(svc: CrmService);
@@ -34,4 +35,19 @@ export declare class CrmController {
         stage: LeadStage;
     }): Promise<import("./entities/lead.entity").Lead>;
     removeLead(u: JwtPayload, id: string): Promise<void>;
+    getAnalytics(u: JwtPayload): Promise<{
+        totalLeads: number;
+        wonLeads: number;
+        conversionRate: number;
+        totalProposals: number;
+        totalContracts: number;
+    }>;
+    findProposals(u: JwtPayload): Promise<import("./entities/proposal.entity").Proposal[]>;
+    createProposal(u: JwtPayload, dto: any): Promise<import("./entities/proposal.entity").Proposal>;
+    updateProposalStatus(u: JwtPayload, id: string, dto: {
+        status: ProposalStatus;
+    }): Promise<import("./entities/proposal.entity").Proposal | null>;
+    findContracts(u: JwtPayload): Promise<import("./entities/proposal.entity").Contract[]>;
+    createContract(u: JwtPayload, dto: any): Promise<import("./entities/proposal.entity").Contract>;
+    signContract(u: JwtPayload, id: string): Promise<import("./entities/proposal.entity").Contract | null>;
 }

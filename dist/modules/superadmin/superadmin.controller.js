@@ -17,53 +17,72 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const superadmin_service_1 = require("./superadmin.service");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
+const public_decorator_1 = require("../../common/decorators/public.decorator");
 const jwt_payload_interface_1 = require("../../common/interfaces/jwt-payload.interface");
 let SuperadminController = class SuperadminController {
     svc;
     constructor(svc) {
         this.svc = svc;
     }
-    getStats() {
-        return this.svc.getDashboardStats();
-    }
-    findTenants(q) {
-        return this.svc.findTenants(q);
-    }
-    findTenant(id) {
-        return this.svc.findTenant(id);
-    }
-    updateStatus(id, dto) {
-        return this.svc.updateTenantStatus(id, dto.status);
-    }
-    findPlans() {
-        return this.svc.findPlans();
-    }
-    createPlan(dto) {
-        return this.svc.createPlan(dto);
-    }
-    updatePlan(id, dto) {
-        return this.svc.updatePlan(id, dto);
-    }
-    findAllUsers(q) {
-        return this.svc.findAllUsers(q);
-    }
+    getStats() { return this.svc.getDashboardStats(); }
+    getBillingOverview() { return this.svc.getBillingOverview(); }
+    getGrowth() { return this.svc.getGrowthAnalytics(); }
+    findTenants(q) { return this.svc.findTenants(q); }
+    createTenant(dto) { return this.svc.createTenant(dto); }
+    findTenant(id) { return this.svc.findTenant(id); }
+    updateStatus(id, dto) { return this.svc.updateTenantStatus(id, dto.status); }
+    impersonate(id) { return this.svc.impersonateTenant(id); }
+    findPlans() { return this.svc.findPlans(); }
+    createPlan(dto) { return this.svc.createPlan(dto); }
+    updatePlan(id, dto) { return this.svc.updatePlan(id, dto); }
+    findAllUsers(q) { return this.svc.findAllUsers(q); }
+    findAnnouncements() { return this.svc.findAnnouncements(); }
+    createAnnouncement(dto) { return this.svc.createAnnouncement(dto); }
+    updateAnnouncement(id, dto) { return this.svc.updateAnnouncement(id, dto); }
+    deleteAnnouncement(id) { return this.svc.deleteAnnouncement(id); }
+    getActiveAnnouncements() { return this.svc.getActiveAnnouncements(); }
 };
 exports.SuperadminController = SuperadminController;
 __decorate([
     (0, common_1.Get)('stats'),
+    (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], SuperadminController.prototype, "getStats", null);
 __decorate([
+    (0, common_1.Get)('billing/overview'),
+    (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], SuperadminController.prototype, "getBillingOverview", null);
+__decorate([
+    (0, common_1.Get)('analytics/growth'),
+    (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], SuperadminController.prototype, "getGrowth", null);
+__decorate([
     (0, common_1.Get)('tenants'),
+    (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], SuperadminController.prototype, "findTenants", null);
 __decorate([
+    (0, common_1.Post)('tenants'),
+    (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], SuperadminController.prototype, "createTenant", null);
+__decorate([
     (0, common_1.Get)('tenants/:id'),
+    (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -71,6 +90,7 @@ __decorate([
 ], SuperadminController.prototype, "findTenant", null);
 __decorate([
     (0, common_1.Patch)('tenants/:id/status'),
+    (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -78,13 +98,23 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], SuperadminController.prototype, "updateStatus", null);
 __decorate([
+    (0, common_1.Post)('tenants/:id/impersonate'),
+    (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], SuperadminController.prototype, "impersonate", null);
+__decorate([
     (0, common_1.Get)('plans'),
+    (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], SuperadminController.prototype, "findPlans", null);
 __decorate([
     (0, common_1.Post)('plans'),
+    (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -92,6 +122,7 @@ __decorate([
 ], SuperadminController.prototype, "createPlan", null);
 __decorate([
     (0, common_1.Patch)('plans/:id'),
+    (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -100,15 +131,55 @@ __decorate([
 ], SuperadminController.prototype, "updatePlan", null);
 __decorate([
     (0, common_1.Get)('users'),
+    (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], SuperadminController.prototype, "findAllUsers", null);
+__decorate([
+    (0, common_1.Get)('announcements'),
+    (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], SuperadminController.prototype, "findAnnouncements", null);
+__decorate([
+    (0, common_1.Post)('announcements'),
+    (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], SuperadminController.prototype, "createAnnouncement", null);
+__decorate([
+    (0, common_1.Patch)('announcements/:id'),
+    (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], SuperadminController.prototype, "updateAnnouncement", null);
+__decorate([
+    (0, common_1.Delete)('announcements/:id'),
+    (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
+    (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], SuperadminController.prototype, "deleteAnnouncement", null);
+__decorate([
+    (0, public_decorator_1.Public)(),
+    (0, common_1.Get)('announcements/active'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], SuperadminController.prototype, "getActiveAnnouncements", null);
 exports.SuperadminController = SuperadminController = __decorate([
     (0, swagger_1.ApiTags)('SuperAdmin'),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
     (0, common_1.Controller)('superadmin'),
     __metadata("design:paramtypes", [superadmin_service_1.SuperadminService])
 ], SuperadminController);

@@ -1,14 +1,20 @@
 import { Repository } from 'typeorm';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { Tenant, TenantStatus } from '../tenants/entities/tenant.entity';
 import { User } from '../users/entities/user.entity';
 import { Plan } from '../billing/entities/plan.entity';
 import { Subscription } from '../billing/entities/subscription.entity';
+import { Announcement } from './entities/announcement.entity';
 export declare class SuperadminService {
     private tenantRepo;
     private userRepo;
     private planRepo;
     private subRepo;
-    constructor(tenantRepo: Repository<Tenant>, userRepo: Repository<User>, planRepo: Repository<Plan>, subRepo: Repository<Subscription>);
+    private annoRepo;
+    private jwtService;
+    private configService;
+    constructor(tenantRepo: Repository<Tenant>, userRepo: Repository<User>, planRepo: Repository<Plan>, subRepo: Repository<Subscription>, annoRepo: Repository<Announcement>, jwtService: JwtService, configService: ConfigService);
     findTenants(q: {
         status?: string;
         search?: string;
@@ -24,7 +30,20 @@ export declare class SuperadminService {
         };
     }>;
     findTenant(id: string): Promise<Tenant>;
+    createTenant(dto: Partial<Tenant>): Promise<Tenant>;
     updateTenantStatus(id: string, status: TenantStatus): Promise<Tenant>;
+    impersonateTenant(tenantId: string): Promise<{
+        accessToken: string;
+        tenant: {
+            id: string;
+            companyName: string;
+        };
+        user: {
+            id: string;
+            email: string;
+            role: import("../../common/interfaces/jwt-payload.interface").UserRole;
+        };
+    }>;
     getDashboardStats(): Promise<{
         totalTenants: number;
         activeCount: number;
@@ -33,6 +52,10 @@ export declare class SuperadminService {
         totalUsers: number;
         recentTenants: Tenant[];
     }>;
+    getBillingOverview(): Promise<{
+        subscriptionsByStatus: any[];
+    }>;
+    getGrowthAnalytics(): Promise<any[]>;
     findPlans(): Promise<Plan[]>;
     createPlan(dto: Partial<Plan>): Promise<Plan>;
     updatePlan(id: string, dto: Partial<Plan>): Promise<Plan | null>;
@@ -41,24 +64,7 @@ export declare class SuperadminService {
         page?: number;
         limit?: number;
     }): Promise<{
-        data: {
-            passwordHash: undefined;
-            refreshTokenHash: undefined;
-            tenantId: string | null;
-            email: string;
-            firstName: string;
-            lastName: string;
-            phone: string | null;
-            avatarUrl: string | null;
-            role: import("../../common/interfaces/jwt-payload.interface").UserRole;
-            status: import("../users/entities/user.entity").UserStatus;
-            isSuperAdmin: boolean;
-            lastLoginAt: Date | null;
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            deletedAt: Date | null;
-        }[];
+        data: any[];
         meta: {
             page: number;
             limit: number;
@@ -66,4 +72,9 @@ export declare class SuperadminService {
             totalPages: number;
         };
     }>;
+    findAnnouncements(): Promise<Announcement[]>;
+    createAnnouncement(dto: Partial<Announcement>): Promise<Announcement>;
+    updateAnnouncement(id: string, dto: Partial<Announcement>): Promise<Announcement | null>;
+    deleteAnnouncement(id: string): Promise<void>;
+    getActiveAnnouncements(): Promise<Announcement[]>;
 }

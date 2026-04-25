@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const client_entity_1 = require("./entities/client.entity");
 const lead_entity_1 = require("./entities/lead.entity");
+const proposal_entity_1 = require("./entities/proposal.entity");
 const crm_service_1 = require("./crm.service");
 const crm_controller_1 = require("./crm.controller");
 let CrmModule = class CrmModule {
@@ -18,7 +19,7 @@ let CrmModule = class CrmModule {
 exports.CrmModule = CrmModule;
 exports.CrmModule = CrmModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([client_entity_1.Client, lead_entity_1.Lead])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([client_entity_1.Client, lead_entity_1.Lead, proposal_entity_1.Proposal, proposal_entity_1.Contract])],
         controllers: [crm_controller_1.CrmController],
         providers: [crm_service_1.CrmService],
         exports: [crm_service_1.CrmService],

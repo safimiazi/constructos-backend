@@ -34,6 +34,13 @@ let CrmController = class CrmController {
     updateLead(u, id, dto) { return this.svc.updateLead(u.tenantId, id, dto); }
     moveStage(u, id, dto) { return this.svc.moveLeadStage(u.tenantId, id, dto.stage); }
     removeLead(u, id) { return this.svc.removeLead(u.tenantId, id); }
+    getAnalytics(u) { return this.svc.getAnalytics(u.tenantId); }
+    findProposals(u) { return this.svc.findProposals(u.tenantId); }
+    createProposal(u, dto) { return this.svc.createProposal(u.tenantId, u.sub, dto); }
+    updateProposalStatus(u, id, dto) { return this.svc.updateProposalStatus(u.tenantId, id, dto.status); }
+    findContracts(u) { return this.svc.findContracts(u.tenantId); }
+    createContract(u, dto) { return this.svc.createContract(u.tenantId, u.sub, dto); }
+    signContract(u, id) { return this.svc.signContract(u.tenantId, id); }
 };
 exports.CrmController = CrmController;
 __decorate([
@@ -136,6 +143,60 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], CrmController.prototype, "removeLead", null);
+__decorate([
+    (0, common_1.Get)('analytics'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], CrmController.prototype, "getAnalytics", null);
+__decorate([
+    (0, common_1.Get)('proposals'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], CrmController.prototype, "findProposals", null);
+__decorate([
+    (0, common_1.Post)('proposals'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], CrmController.prototype, "createProposal", null);
+__decorate([
+    (0, common_1.Patch)('proposals/:id/status'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], CrmController.prototype, "updateProposalStatus", null);
+__decorate([
+    (0, common_1.Get)('contracts'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], CrmController.prototype, "findContracts", null);
+__decorate([
+    (0, common_1.Post)('contracts'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], CrmController.prototype, "createContract", null);
+__decorate([
+    (0, common_1.Post)('contracts/:id/sign'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], CrmController.prototype, "signContract", null);
 exports.CrmController = CrmController = __decorate([
     (0, swagger_1.ApiTags)('CRM'),
     (0, swagger_1.ApiBearerAuth)(),

@@ -41,19 +41,24 @@ import { Leave } from './modules/hr/entities/leave.entity';
 import { PayrollRun, PayrollItem } from './modules/hr/entities/payroll.entity';
 import { Department } from './modules/hr/entities/department.entity';
 import { JobPosting, Applicant } from './modules/hr/entities/job-posting.entity';
+import { LeaveType } from './modules/hr/entities/leave-type.entity';
 import { Invoice } from './modules/finance/entities/invoice.entity';
 import { Budget } from './modules/finance/entities/budget.entity';
 import { BankAccount } from './modules/finance/entities/bank-account.entity';
+import { ChartOfAccount, JournalEntry, InvoicePayment } from './modules/finance/entities/journal.entity';
 import { Vendor } from './modules/procurement/entities/vendor.entity';
 import { PurchaseOrder } from './modules/procurement/entities/purchase-order.entity';
 import { MaterialRequest } from './modules/procurement/entities/material-request.entity';
 import { Inventory } from './modules/procurement/entities/inventory.entity';
+import { RFQ, GRN } from './modules/procurement/entities/rfq.entity';
 import { Client } from './modules/crm/entities/client.entity';
 import { Lead } from './modules/crm/entities/lead.entity';
+import { Proposal, Contract } from './modules/crm/entities/proposal.entity';
 import { Incident } from './modules/hse/entities/incident.entity';
 import { Document } from './modules/documents/entities/document.entity';
 import { Notification } from './modules/notifications/entities/notification.entity';
 import { AuditLog } from './modules/audit-log/audit-log.entity';
+import { Announcement } from './modules/superadmin/entities/announcement.entity';
 
 @Module({
   imports: [
@@ -71,14 +76,15 @@ import { AuditLog } from './modules/audit-log/audit-log.entity';
         entities: [
           User, Tenant, Plan, Subscription,
           Project, Task, DailyLog, Milestone, Issue,
-          Employee, Attendance, Leave, PayrollRun, PayrollItem, Department, JobPosting, Applicant,
-          Invoice, Budget, BankAccount,
-          Vendor, PurchaseOrder, MaterialRequest, Inventory,
-          Client, Lead,
+          Employee, Attendance, Leave, PayrollRun, PayrollItem, Department, JobPosting, Applicant, LeaveType,
+          Invoice, Budget, BankAccount, ChartOfAccount, JournalEntry, InvoicePayment,
+          Vendor, PurchaseOrder, MaterialRequest, Inventory, RFQ, GRN,
+          Client, Lead, Proposal, Contract,
           Incident,
           Document,
           Notification,
           AuditLog,
+          Announcement,
         ],
         synchronize: config.get('NODE_ENV') !== 'production',
         logging: config.get('NODE_ENV') === 'development',

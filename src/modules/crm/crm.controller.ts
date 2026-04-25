@@ -4,6 +4,7 @@ import { CrmService } from './crm.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { LeadStage } from './entities/lead.entity';
+import { ProposalStatus } from './entities/proposal.entity';
 
 @ApiTags('CRM')
 @ApiBearerAuth()
@@ -24,4 +25,14 @@ export class CrmController {
   @Patch('leads/:id') updateLead(@CurrentUser() u: JwtPayload, @Param('id') id: string, @Body() dto: any) { return this.svc.updateLead(u.tenantId!, id, dto); }
   @Patch('leads/:id/stage') moveStage(@CurrentUser() u: JwtPayload, @Param('id') id: string, @Body() dto: { stage: LeadStage }) { return this.svc.moveLeadStage(u.tenantId!, id, dto.stage); }
   @Delete('leads/:id') @HttpCode(HttpStatus.NO_CONTENT) removeLead(@CurrentUser() u: JwtPayload, @Param('id') id: string) { return this.svc.removeLead(u.tenantId!, id); }
+
+  @Get('analytics') getAnalytics(@CurrentUser() u: JwtPayload) { return this.svc.getAnalytics(u.tenantId!); }
+
+  @Get('proposals') findProposals(@CurrentUser() u: JwtPayload) { return this.svc.findProposals(u.tenantId!); }
+  @Post('proposals') createProposal(@CurrentUser() u: JwtPayload, @Body() dto: any) { return this.svc.createProposal(u.tenantId!, u.sub, dto); }
+  @Patch('proposals/:id/status') updateProposalStatus(@CurrentUser() u: JwtPayload, @Param('id') id: string, @Body() dto: { status: ProposalStatus }) { return this.svc.updateProposalStatus(u.tenantId!, id, dto.status); }
+
+  @Get('contracts') findContracts(@CurrentUser() u: JwtPayload) { return this.svc.findContracts(u.tenantId!); }
+  @Post('contracts') createContract(@CurrentUser() u: JwtPayload, @Body() dto: any) { return this.svc.createContract(u.tenantId!, u.sub, dto); }
+  @Post('contracts/:id/sign') signContract(@CurrentUser() u: JwtPayload, @Param('id') id: string) { return this.svc.signContract(u.tenantId!, id); }
 }

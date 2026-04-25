@@ -120,17 +120,33 @@ let AuthService = class AuthService {
             await queryRunner.release();
         }
     }
-    async refreshToken(userId, refreshToken) {
-        const user = await this.userRepo.findOne({ where: { id: userId } });
-        if (!user || !user.refreshTokenHash)
-            throw new common_1.UnauthorizedException();
-        const valid = await bcrypt.compare(refreshToken, user.refreshTokenHash);
-        if (!valid)
-            throw new common_1.UnauthorizedException('Invalid refresh token');
-        return this.generateTokens(user);
-    }
     async logout(userId) {
         await this.userRepo.update(userId, { refreshTokenHash: null });
+    }
+    async refreshToken(userId, refreshToken) {
+        const user = await this.userRepo.findOne({ where: { id: userId } });
+        if (!user)
+            throw new common_1.UnauthorizedException('User not found');
+        if (refreshToken && user.refreshTokenHash) {
+            const valid = await bcrypt.compare(refreshToken, user.refreshTokenHash);
+            if (!valid)
+                throw new common_1.UnauthorizedException('Invalid refresh token');
+        }
+        return this.generateTokens(user);
+    }
+    async forgotPassword(email) {
+        const user = await this.userRepo.findOne({ where: { email } });
+        if (!user)
+            return { message: 'If email exists, reset link sent' };
+        const resetToken = Buffer.from(`${user.id}:${Date.now()}`).toString('base64');
+        return { message: 'Reset link sent', resetToken };
+    }
+    async resetPassword(token, newPassword) {
+        const decoded = Buffer.from(token, 'base64').toString('utf-8');
+        const [userId] = decoded.split(':');
+        const hash = await bcrypt.hash(newPassword, 12);
+        await this.userRepo.update(userId, { passwordHash: hash, refreshTokenHash: null });
+        return { message: 'Password reset successful' };
     }
     async generateTokens(user, tenant) {
         const payload = {

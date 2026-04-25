@@ -5,6 +5,7 @@ import { Leave } from './entities/leave.entity';
 import { PayrollRun, PayrollItem } from './entities/payroll.entity';
 import { Department } from './entities/department.entity';
 import { JobPosting, Applicant, ApplicantStage } from './entities/job-posting.entity';
+import { LeaveType } from './entities/leave-type.entity';
 export declare class HrService {
     private empRepo;
     private attRepo;
@@ -14,7 +15,8 @@ export declare class HrService {
     private deptRepo;
     private jobRepo;
     private applicantRepo;
-    constructor(empRepo: Repository<Employee>, attRepo: Repository<Attendance>, leaveRepo: Repository<Leave>, runRepo: Repository<PayrollRun>, itemRepo: Repository<PayrollItem>, deptRepo: Repository<Department>, jobRepo: Repository<JobPosting>, applicantRepo: Repository<Applicant>);
+    private leaveTypeRepo;
+    constructor(empRepo: Repository<Employee>, attRepo: Repository<Attendance>, leaveRepo: Repository<Leave>, runRepo: Repository<PayrollRun>, itemRepo: Repository<PayrollItem>, deptRepo: Repository<Department>, jobRepo: Repository<JobPosting>, applicantRepo: Repository<Applicant>, leaveTypeRepo: Repository<LeaveType>);
     findEmployees(tenantId: string, q: {
         search?: string;
         status?: string;
@@ -54,6 +56,17 @@ export declare class HrService {
     rejectLeave(tenantId: string, id: string, reason: string): Promise<Leave | null>;
     findPayrollRuns(tenantId: string): Promise<PayrollRun[]>;
     createPayrollRun(tenantId: string, userId: string, payPeriod: string): Promise<PayrollRun | null>;
+    updatePayrollItem(tenantId: string, itemId: string, dto: {
+        overtimePay?: number;
+        bonuses?: {
+            label: string;
+            amount: number;
+        }[];
+        deductions?: {
+            label: string;
+            amount: number;
+        }[];
+    }): Promise<PayrollItem | null>;
     getPayrollItems(tenantId: string, runId: string): Promise<PayrollItem[]>;
     approvePayrollRun(tenantId: string, runId: string, approverId: string): Promise<PayrollRun | null>;
     findJobs(tenantId: string): Promise<JobPosting[]>;
@@ -62,4 +75,9 @@ export declare class HrService {
     findApplicants(tenantId: string, jobId: string): Promise<Applicant[]>;
     createApplicant(tenantId: string, userId: string, dto: Partial<Applicant>): Promise<Applicant>;
     moveApplicantStage(tenantId: string, id: string, stage: ApplicantStage): Promise<Applicant | null>;
+    clockIn(tenantId: string, employeeId: string, userId: string, location?: string): Promise<Attendance | null>;
+    clockOut(tenantId: string, employeeId: string, location?: string): Promise<Attendance | null>;
+    findLeaveTypes(tenantId: string): Promise<LeaveType[]>;
+    createLeaveType(tenantId: string, userId: string, dto: Partial<LeaveType>): Promise<LeaveType>;
+    updateLeaveType(tenantId: string, id: string, dto: Partial<LeaveType>): Promise<LeaveType | null>;
 }

@@ -15,6 +15,7 @@ const leave_entity_1 = require("./entities/leave.entity");
 const payroll_entity_1 = require("./entities/payroll.entity");
 const department_entity_1 = require("./entities/department.entity");
 const job_posting_entity_1 = require("./entities/job-posting.entity");
+const leave_type_entity_1 = require("./entities/leave-type.entity");
 const hr_service_1 = require("./hr.service");
 const hr_controller_1 = require("./hr.controller");
 let HrModule = class HrModule {
@@ -22,7 +23,7 @@ let HrModule = class HrModule {
 exports.HrModule = HrModule;
 exports.HrModule = HrModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([employee_entity_1.Employee, attendance_entity_1.Attendance, leave_entity_1.Leave, payroll_entity_1.PayrollRun, payroll_entity_1.PayrollItem, department_entity_1.Department, job_posting_entity_1.JobPosting, job_posting_entity_1.Applicant])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([employee_entity_1.Employee, attendance_entity_1.Attendance, leave_entity_1.Leave, payroll_entity_1.PayrollRun, payroll_entity_1.PayrollItem, department_entity_1.Department, job_posting_entity_1.JobPosting, job_posting_entity_1.Applicant, leave_type_entity_1.LeaveType])],
         controllers: [hr_controller_1.HrController],
         providers: [hr_service_1.HrService],
         exports: [hr_service_1.HrService],

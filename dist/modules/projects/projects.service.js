@@ -73,7 +73,21 @@ let ProjectsService = class ProjectsService {
     }
     async updateTask(tenantId, taskId, dto) {
         await this.taskRepo.update({ id: taskId, tenantId }, dto);
-        return this.taskRepo.findOne({ where: { id: taskId, tenantId } });
+        const task = await this.taskRepo.findOne({ where: { id: taskId, tenantId } });
+        if (task && (dto.progressPct !== undefined || dto.status !== undefined)) {
+            await this.recalcProjectCompletion(tenantId, task.projectId);
+        }
+        return task;
+    }
+    async recalcProjectCompletion(tenantId, projectId) {
+        const tasks = await this.taskRepo.find({ where: { tenantId, projectId } });
+        if (!tasks.length)
+            return;
+        const avg = tasks.reduce((s, t) => {
+            const pct = t.status === 'done' ? 100 : t.status === 'blocked' ? 0 : Number(t.progressPct);
+            return s + pct;
+        }, 0) / tasks.length;
+        await this.projectRepo.update({ id: projectId, tenantId }, { completionPercentage: Math.round(avg) });
     }
     async removeTask(tenantId, taskId) {
         await this.taskRepo.softDelete({ id: taskId, tenantId });
@@ -81,9 +95,13 @@ let ProjectsService = class ProjectsService {
     getLogs(tenantId, projectId) {
         return this.logRepo.find({ where: { tenantId, projectId }, order: { date: 'DESC' } });
     }
-    createLog(tenantId, projectId, userId, dto) {
+    async createLog(tenantId, projectId, userId, dto) {
         const l = this.logRepo.create({ ...dto, tenantId, projectId, createdBy: userId });
-        return this.logRepo.save(l);
+        const saved = await this.logRepo.save(l);
+        if (dto.progressPct !== undefined) {
+            await this.projectRepo.update({ id: projectId, tenantId }, { completionPercentage: Number(dto.progressPct) });
+        }
+        return saved;
     }
     getMilestones(tenantId, projectId) {
         return this.milestoneRepo.find({ where: { tenantId, projectId }, order: { dueDate: 'ASC' } });
@@ -121,7 +139,17 @@ let ProjectsService = class ProjectsService {
             this.projectRepo.count({ where: { tenantId, status: 'on_hold' } }),
         ]);
         const recentProjects = await this.projectRepo.find({ where: { tenantId }, order: { createdAt: 'DESC' }, take: 5 });
-        return { total, active, completed, onHold, recentProjects };
+        const budgetStats = await this.projectRepo.createQueryBuilder('p')
+            .select('SUM(p.budget_amount)', 'totalBudget')
+            .addSelect('SUM(p.completion_percentage)', 'totalCompletion')
+            .addSelect('COUNT(*)', 'count')
+            .where('p.tenant_id = :tenantId AND p.deleted_at IS NULL', { tenantId })
+            .getRawOne();
+        const overdueCount = await this.projectRepo.createQueryBuilder('p')
+            .where('p.tenant_id = :tenantId AND p.end_date < NOW() AND p.status NOT IN (:...statuses) AND p.deleted_at IS NULL', { tenantId, statuses: ['completed', 'cancelled'] })
+            .getCount();
+        const avgCompletion = budgetStats?.count > 0 ? Math.round(Number(budgetStats.totalCompletion) / Number(budgetStats.count)) : 0;
+        return { total, active, completed, onHold, overdueCount, avgCompletion, totalBudget: budgetStats?.totalBudget ?? 0, recentProjects };
     }
 };
 exports.ProjectsService = ProjectsService;

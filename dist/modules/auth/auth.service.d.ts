@@ -38,7 +38,8 @@ export declare class AuthService {
             isSuperAdmin: boolean;
         };
     }>;
-    refreshToken(userId: string, refreshToken: string): Promise<{
+    logout(userId: string): Promise<void>;
+    refreshToken(userId: string, refreshToken?: string): Promise<{
         accessToken: string;
         refreshToken: string;
         user: {
@@ -51,6 +52,15 @@ export declare class AuthService {
             isSuperAdmin: boolean;
         };
     }>;
-    logout(userId: string): Promise<void>;
+    forgotPassword(email: string): Promise<{
+        message: string;
+        resetToken?: undefined;
+    } | {
+        message: string;
+        resetToken: string;
+    }>;
+    resetPassword(token: string, newPassword: string): Promise<{
+        message: string;
+    }>;
     private generateTokens;
 }

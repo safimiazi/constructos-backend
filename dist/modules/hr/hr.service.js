@@ -22,6 +22,7 @@ const leave_entity_1 = require("./entities/leave.entity");
 const payroll_entity_1 = require("./entities/payroll.entity");
 const department_entity_1 = require("./entities/department.entity");
 const job_posting_entity_1 = require("./entities/job-posting.entity");
+const leave_type_entity_1 = require("./entities/leave-type.entity");
 let HrService = class HrService {
     empRepo;
     attRepo;
@@ -31,7 +32,8 @@ let HrService = class HrService {
     deptRepo;
     jobRepo;
     applicantRepo;
-    constructor(empRepo, attRepo, leaveRepo, runRepo, itemRepo, deptRepo, jobRepo, applicantRepo) {
+    leaveTypeRepo;
+    constructor(empRepo, attRepo, leaveRepo, runRepo, itemRepo, deptRepo, jobRepo, applicantRepo, leaveTypeRepo) {
         this.empRepo = empRepo;
         this.attRepo = attRepo;
         this.leaveRepo = leaveRepo;
@@ -40,6 +42,7 @@ let HrService = class HrService {
         this.deptRepo = deptRepo;
         this.jobRepo = jobRepo;
         this.applicantRepo = applicantRepo;
+        this.leaveTypeRepo = leaveTypeRepo;
     }
     findEmployees(tenantId, q) {
         const { search, status, page = 1, limit = 20 } = q;
@@ -120,10 +123,22 @@ let HrService = class HrService {
         return this.leaveRepo.save(this.leaveRepo.create({ ...dto, tenantId, createdBy: userId }));
     }
     async approveLeave(tenantId, id, approverId) {
+        const leave = await this.leaveRepo.findOne({ where: { id, tenantId } });
+        if (!leave)
+            throw new Error('Leave request not found');
+        if (leave.status !== leave_entity_1.LeaveStatus.PENDING)
+            throw new Error(`Cannot approve leave with status: ${leave.status}`);
         await this.leaveRepo.update({ id, tenantId }, { status: leave_entity_1.LeaveStatus.APPROVED, approvedBy: approverId, approvedAt: new Date() });
         return this.leaveRepo.findOne({ where: { id, tenantId } });
     }
     async rejectLeave(tenantId, id, reason) {
+        const leave = await this.leaveRepo.findOne({ where: { id, tenantId } });
+        if (!leave)
+            throw new Error('Leave request not found');
+        if (leave.status !== leave_entity_1.LeaveStatus.PENDING)
+            throw new Error(`Cannot reject leave with status: ${leave.status}`);
+        if (!reason?.trim())
+            throw new Error('Rejection reason is required');
         await this.leaveRepo.update({ id, tenantId }, { status: leave_entity_1.LeaveStatus.REJECTED, rejectionReason: reason });
         return this.leaveRepo.findOne({ where: { id, tenantId } });
     }
@@ -133,16 +148,36 @@ let HrService = class HrService {
     async createPayrollRun(tenantId, userId, payPeriod) {
         const employees = await this.empRepo.find({ where: { tenantId } });
         const run = await this.runRepo.save(this.runRepo.create({ tenantId, payPeriod, createdBy: userId, totalEmployees: employees.length }));
-        const items = employees.map(e => this.itemRepo.create({
-            tenantId, runId: run.id, employeeId: e.id,
-            basicSalary: e.basicSalary, overtimePay: 0,
-            bonuses: [], deductions: [], totalBonuses: 0, totalDeductions: 0,
-            netPay: e.basicSalary, createdBy: userId,
-        }));
+        const items = employees.map(e => {
+            const basic = Number(e.basicSalary);
+            const netPay = basic;
+            return this.itemRepo.create({
+                tenantId, runId: run.id, employeeId: e.id,
+                basicSalary: basic, overtimePay: 0,
+                bonuses: [], deductions: [], totalBonuses: 0, totalDeductions: 0,
+                netPay, createdBy: userId,
+            });
+        });
         await this.itemRepo.save(items);
         const totalNetPay = items.reduce((s, i) => s + Number(i.netPay), 0);
         await this.runRepo.update(run.id, { totalNetPay });
         return this.runRepo.findOne({ where: { id: run.id } });
+    }
+    async updatePayrollItem(tenantId, itemId, dto) {
+        const item = await this.itemRepo.findOne({ where: { id: itemId, tenantId } });
+        if (!item)
+            throw new Error('Payroll item not found');
+        const overtimePay = dto.overtimePay ?? Number(item.overtimePay);
+        const bonuses = dto.bonuses ?? item.bonuses;
+        const deductions = dto.deductions ?? item.deductions;
+        const totalBonuses = bonuses.reduce((s, b) => s + Number(b.amount), 0);
+        const totalDeductions = deductions.reduce((s, d) => s + Number(d.amount), 0);
+        const netPay = Number(item.basicSalary) + overtimePay + totalBonuses - totalDeductions;
+        await this.itemRepo.update({ id: itemId, tenantId }, { overtimePay, bonuses, deductions, totalBonuses, totalDeductions, netPay });
+        const allItems = await this.itemRepo.find({ where: { tenantId, runId: item.runId } });
+        const totalNetPay = allItems.reduce((s, i) => s + (i.id === itemId ? netPay : Number(i.netPay)), 0);
+        await this.runRepo.update({ id: item.runId }, { totalNetPay });
+        return this.itemRepo.findOne({ where: { id: itemId, tenantId } });
     }
     getPayrollItems(tenantId, runId) {
         return this.itemRepo.find({ where: { tenantId, runId } });
@@ -171,6 +206,46 @@ let HrService = class HrService {
         await this.applicantRepo.update({ id, tenantId }, { stage });
         return this.applicantRepo.findOne({ where: { id, tenantId } });
     }
+    async clockIn(tenantId, employeeId, userId, location) {
+        const today = new Date().toISOString().split('T')[0];
+        const existing = await this.attRepo.findOne({ where: { tenantId, employeeId, date: today } });
+        if (existing) {
+            await this.attRepo.update({ id: existing.id }, { checkIn: new Date(), location, status: attendance_entity_1.AttendanceStatus.PRESENT });
+            return this.attRepo.findOne({ where: { id: existing.id } });
+        }
+        return this.attRepo.save(this.attRepo.create({
+            tenantId, employeeId, date: today,
+            checkIn: new Date(), status: attendance_entity_1.AttendanceStatus.PRESENT,
+            location, createdBy: userId,
+        }));
+    }
+    async clockOut(tenantId, employeeId, location) {
+        const today = new Date().toISOString().split('T')[0];
+        const record = await this.attRepo.findOne({ where: { tenantId, employeeId, date: today } });
+        if (!record)
+            throw new common_1.NotFoundException('No clock-in record found for today. Please clock in first.');
+        if (!record.checkIn)
+            throw new Error('Clock-in time not recorded. Cannot calculate working hours.');
+        const checkOut = new Date();
+        const checkIn = new Date(record.checkIn);
+        const diffMs = checkOut.getTime() - checkIn.getTime();
+        if (diffMs < 0)
+            throw new Error('Clock-out time cannot be before clock-in time.');
+        const workingHours = Math.round((diffMs / 3600000) * 100) / 100;
+        const overtimeHours = Math.max(0, Math.round((workingHours - 8) * 100) / 100);
+        await this.attRepo.update({ id: record.id }, { checkOut, workingHours, overtimeHours, location });
+        return this.attRepo.findOne({ where: { id: record.id } });
+    }
+    findLeaveTypes(tenantId) {
+        return this.leaveTypeRepo.find({ where: { tenantId, isActive: true }, order: { name: 'ASC' } });
+    }
+    createLeaveType(tenantId, userId, dto) {
+        return this.leaveTypeRepo.save(this.leaveTypeRepo.create({ ...dto, tenantId, createdBy: userId }));
+    }
+    async updateLeaveType(tenantId, id, dto) {
+        await this.leaveTypeRepo.update({ id, tenantId }, dto);
+        return this.leaveTypeRepo.findOne({ where: { id, tenantId } });
+    }
 };
 exports.HrService = HrService;
 exports.HrService = HrService = __decorate([
@@ -183,7 +258,9 @@ exports.HrService = HrService = __decorate([
     __param(5, (0, typeorm_1.InjectRepository)(department_entity_1.Department)),
     __param(6, (0, typeorm_1.InjectRepository)(job_posting_entity_1.JobPosting)),
     __param(7, (0, typeorm_1.InjectRepository)(job_posting_entity_1.Applicant)),
+    __param(8, (0, typeorm_1.InjectRepository)(leave_type_entity_1.LeaveType)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
