@@ -46,7 +46,10 @@ export declare class HrService {
         startDate?: string;
         endDate?: string;
     }): Promise<Attendance[]>;
-    createAttendance(tenantId: string, userId: string, dto: Partial<Attendance>): Promise<Attendance>;
+    createAttendance(tenantId: string, userId: string, dto: Partial<Attendance> & {
+        checkIn?: string;
+        checkOut?: string;
+    }): Promise<Attendance>;
     updateAttendance(tenantId: string, id: string, dto: Partial<Attendance>): Promise<Attendance | null>;
     getAttendanceSummary(tenantId: string, month: string): Promise<any[]>;
     findLeaves(tenantId: string, q: {

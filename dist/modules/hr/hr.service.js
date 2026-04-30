@@ -101,7 +101,21 @@ let HrService = class HrService {
         return qb.getMany();
     }
     createAttendance(tenantId, userId, dto) {
-        return this.attRepo.save(this.attRepo.create({ ...dto, tenantId, createdBy: userId }));
+        const data = { ...dto, tenantId, createdBy: userId };
+        if (dto.date && dto.checkIn && !dto.checkIn.includes('T')) {
+            data.checkIn = new Date(`${dto.date}T${dto.checkIn}:00`);
+        }
+        if (dto.date && dto.checkOut && !dto.checkOut.includes('T')) {
+            data.checkOut = new Date(`${dto.date}T${dto.checkOut}:00`);
+        }
+        if (data.checkIn && data.checkOut) {
+            const diffMs = new Date(data.checkOut).getTime() - new Date(data.checkIn).getTime();
+            if (diffMs > 0) {
+                data.workingHours = Math.round((diffMs / 3600000) * 100) / 100;
+                data.overtimeHours = Math.max(0, Math.round((data.workingHours - 8) * 100) / 100);
+            }
+        }
+        return this.attRepo.save(this.attRepo.create(data));
     }
     async updateAttendance(tenantId, id, dto) {
         await this.attRepo.update({ id, tenantId }, dto);
@@ -149,7 +163,10 @@ let HrService = class HrService {
         return this.runRepo.find({ where: { tenantId }, order: { payPeriod: 'DESC' } });
     }
     async createPayrollRun(tenantId, userId, payPeriod) {
-        const employees = await this.empRepo.find({ where: { tenantId } });
+        const existing = await this.runRepo.findOne({ where: { tenantId, payPeriod } });
+        if (existing)
+            throw new common_1.BadRequestException(`Payroll run for ${payPeriod} already exists (status: ${existing.status})`);
+        const employees = await this.empRepo.find({ where: { tenantId, status: 'active' } });
         const run = await this.runRepo.save(this.runRepo.create({ tenantId, payPeriod, createdBy: userId, totalEmployees: employees.length }));
         const items = employees.map(e => {
             const basic = Number(e.basicSalary);
@@ -256,12 +273,27 @@ let HrService = class HrService {
         const run = await this.runRepo.findOne({ where: { id: runId, tenantId } });
         if (!run)
             throw new common_1.NotFoundException('Payroll run not found');
+        await this.payslipRepo
+            .createQueryBuilder()
+            .delete()
+            .where('tenant_id = :tenantId AND payroll_item_id IN (:...itemIds)', {
+            tenantId,
+            itemIds: items.map(i => i.id),
+        })
+            .execute();
+        if (items.length === 0)
+            return [];
         const payslips = items.map(item => this.payslipRepo.create({
-            tenantId, payrollItemId: item.id, employeeId: item.employeeId,
-            payPeriod: run.payPeriod, basicSalary: item.basicSalary,
-            overtimePay: item.overtimePay, bonuses: item.bonuses,
-            deductions: item.deductions, netPay: item.netPay,
-            createdBy: run.createdBy ?? tenantId,
+            tenantId,
+            payrollItemId: item.id,
+            employeeId: item.employeeId,
+            payPeriod: run.payPeriod,
+            basicSalary: item.basicSalary,
+            overtimePay: item.overtimePay,
+            bonuses: item.bonuses,
+            deductions: item.deductions,
+            netPay: item.netPay,
+            createdBy: run.createdBy ?? null,
         }));
         return this.payslipRepo.save(payslips);
     }

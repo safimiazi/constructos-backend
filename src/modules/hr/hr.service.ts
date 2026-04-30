@@ -88,8 +88,27 @@ export class HrService {
     return qb.getMany();
   }
 
-  createAttendance(tenantId: string, userId: string, dto: Partial<Attendance>) {
-    return this.attRepo.save(this.attRepo.create({ ...dto, tenantId, createdBy: userId }));
+  createAttendance(tenantId: string, userId: string, dto: Partial<Attendance> & { checkIn?: string; checkOut?: string }) {
+    const data: Partial<Attendance> = { ...dto, tenantId, createdBy: userId };
+
+    // Convert "HH:mm" time strings to full timestamps using the attendance date
+    if (dto.date && dto.checkIn && !dto.checkIn.includes('T')) {
+      data.checkIn = new Date(`${dto.date}T${dto.checkIn}:00`) as any;
+    }
+    if (dto.date && dto.checkOut && !dto.checkOut.includes('T')) {
+      data.checkOut = new Date(`${dto.date}T${dto.checkOut}:00`) as any;
+    }
+
+    // Calculate working hours if both times present
+    if (data.checkIn && data.checkOut) {
+      const diffMs = new Date(data.checkOut as any).getTime() - new Date(data.checkIn as any).getTime();
+      if (diffMs > 0) {
+        data.workingHours = Math.round((diffMs / 3600000) * 100) / 100 as any;
+        data.overtimeHours = Math.max(0, Math.round(((data.workingHours as any) - 8) * 100) / 100) as any;
+      }
+    }
+
+    return this.attRepo.save(this.attRepo.create(data));
   }
 
   async updateAttendance(tenantId: string, id: string, dto: Partial<Attendance>) {
@@ -142,7 +161,11 @@ export class HrService {
   }
 
   async createPayrollRun(tenantId: string, userId: string, payPeriod: string) {
-    const employees = await this.empRepo.find({ where: { tenantId } });
+    // Prevent duplicate run for same period
+    const existing = await this.runRepo.findOne({ where: { tenantId, payPeriod } });
+    if (existing) throw new BadRequestException(`Payroll run for ${payPeriod} already exists (status: ${existing.status})`);
+
+    const employees = await this.empRepo.find({ where: { tenantId, status: 'active' as any } });
     const run = await this.runRepo.save(this.runRepo.create({ tenantId, payPeriod, createdBy: userId, totalEmployees: employees.length }));
     const items = employees.map(e => {
       const basic = Number(e.basicSalary);
@@ -273,12 +296,30 @@ export class HrService {
     const items = await this.itemRepo.find({ where: { tenantId, runId } });
     const run = await this.runRepo.findOne({ where: { id: runId, tenantId } });
     if (!run) throw new NotFoundException('Payroll run not found');
+
+    // Delete existing payslips for this run to avoid duplicates
+    await this.payslipRepo
+      .createQueryBuilder()
+      .delete()
+      .where('tenant_id = :tenantId AND payroll_item_id IN (:...itemIds)', {
+        tenantId,
+        itemIds: items.map(i => i.id),
+      })
+      .execute();
+
+    if (items.length === 0) return [];
+
     const payslips = items.map(item => this.payslipRepo.create({
-      tenantId, payrollItemId: item.id, employeeId: item.employeeId,
-      payPeriod: run.payPeriod, basicSalary: item.basicSalary,
-      overtimePay: item.overtimePay, bonuses: item.bonuses,
-      deductions: item.deductions, netPay: item.netPay,
-      createdBy: run.createdBy ?? tenantId,
+      tenantId,
+      payrollItemId: item.id,
+      employeeId: item.employeeId,
+      payPeriod: run.payPeriod,
+      basicSalary: item.basicSalary,
+      overtimePay: item.overtimePay,
+      bonuses: item.bonuses,
+      deductions: item.deductions,
+      netPay: item.netPay,
+      createdBy: run.createdBy ?? null,
     }));
     return this.payslipRepo.save(payslips);
   }

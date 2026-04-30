@@ -45,12 +45,15 @@ export class InvoicePayment extends TenantBaseEntity {
   @Column({ type: 'numeric', precision: 15, scale: 2 })
   amount: number;
 
-  @Column({ name: 'paid_at', type: 'timestamptz' })
-  paidAt: Date;
+  @Column({ name: 'paid_at', type: 'timestamptz', nullable: true })
+  paidAt: Date | null;
 
   @Column({ type: 'varchar', nullable: true })
   method: string | null;
 
   @Column({ type: 'varchar', nullable: true })
   reference: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  notes: string | null;
 }

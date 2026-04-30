@@ -61,6 +61,14 @@ let FinanceService = class FinanceService {
         return inv;
     }
     async createInvoice(tenantId, userId, dto) {
+        if (!dto.issueDate)
+            throw new common_1.BadRequestException('Issue date is required');
+        if (!dto.dueDate)
+            throw new common_1.BadRequestException('Due date is required');
+        if (!dto.subtotal && dto.subtotal !== 0)
+            throw new common_1.BadRequestException('Subtotal is required');
+        if (!dto.totalAmount && dto.totalAmount !== 0)
+            throw new common_1.BadRequestException('Total amount is required');
         const count = await this.invoiceRepo.count({ where: { tenantId } });
         const invoiceNumber = `INV-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
         return this.invoiceRepo.save(this.invoiceRepo.create({ ...dto, tenantId, invoiceNumber, createdBy: userId }));
@@ -81,7 +89,12 @@ let FinanceService = class FinanceService {
             throw new common_1.BadRequestException('Payment amount must be positive');
         if (dto.amount > remaining + 0.01)
             throw new common_1.BadRequestException(`Payment (${dto.amount}) exceeds remaining balance (${remaining.toFixed(2)})`);
-        const payment = await this.paymentRepo.save(this.paymentRepo.create({ invoiceId, amount: dto.amount, method: dto.method, reference: dto.reference, paidAt: new Date(), tenantId, createdBy: userId }));
+        const paidAt = dto.paidAt ? new Date(dto.paidAt) : new Date();
+        const payment = await this.paymentRepo.save(this.paymentRepo.create({
+            invoiceId, amount: dto.amount, method: dto.method,
+            reference: dto.reference, notes: dto.notes,
+            paidAt, tenantId, createdBy: userId,
+        }));
         const newPaid = Number(inv.paidAmount) + Number(dto.amount);
         const newStatus = newPaid >= Number(inv.totalAmount) - 0.01 ? invoice_entity_1.InvoiceStatus.PAID : inv.status;
         await this.invoiceRepo.update({ id: invoiceId }, { paidAmount: newPaid, status: newStatus });

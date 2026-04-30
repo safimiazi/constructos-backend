@@ -41,6 +41,11 @@ export class FinanceService {
   }
 
   async createInvoice(tenantId: string, userId: string, dto: Partial<Invoice>) {
+    if (!dto.issueDate) throw new BadRequestException('Issue date is required');
+    if (!dto.dueDate) throw new BadRequestException('Due date is required');
+    if (!dto.subtotal && dto.subtotal !== 0) throw new BadRequestException('Subtotal is required');
+    if (!dto.totalAmount && dto.totalAmount !== 0) throw new BadRequestException('Total amount is required');
+
     const count = await this.invoiceRepo.count({ where: { tenantId } });
     const invoiceNumber = `INV-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
     return this.invoiceRepo.save(this.invoiceRepo.create({ ...dto, tenantId, invoiceNumber, createdBy: userId }));
@@ -57,12 +62,18 @@ export class FinanceService {
     return this.findInvoice(tenantId, id);
   }
 
-  async recordPayment(tenantId: string, invoiceId: string, userId: string, dto: { amount: number; method?: string; reference?: string }) {
+  async recordPayment(tenantId: string, invoiceId: string, userId: string, dto: { amount: number; method?: string; reference?: string; notes?: string; paidAt?: string }) {
     const inv = await this.findInvoice(tenantId, invoiceId);
     const remaining = Number(inv.totalAmount) - Number(inv.paidAmount);
     if (dto.amount <= 0) throw new BadRequestException('Payment amount must be positive');
     if (dto.amount > remaining + 0.01) throw new BadRequestException(`Payment (${dto.amount}) exceeds remaining balance (${remaining.toFixed(2)})`);
-    const payment = await this.paymentRepo.save(this.paymentRepo.create({ invoiceId, amount: dto.amount, method: dto.method, reference: dto.reference, paidAt: new Date(), tenantId, createdBy: userId }));
+
+    const paidAt = dto.paidAt ? new Date(dto.paidAt) : new Date();
+    const payment = await this.paymentRepo.save(this.paymentRepo.create({
+      invoiceId, amount: dto.amount, method: dto.method,
+      reference: dto.reference, notes: dto.notes,
+      paidAt, tenantId, createdBy: userId,
+    }));
     const newPaid = Number(inv.paidAmount) + Number(dto.amount);
     const newStatus = newPaid >= Number(inv.totalAmount) - 0.01 ? InvoiceStatus.PAID : inv.status;
     await this.invoiceRepo.update({ id: invoiceId }, { paidAmount: newPaid, status: newStatus });

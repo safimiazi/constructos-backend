@@ -38,6 +38,8 @@ export declare class FinanceService {
         amount: number;
         method?: string;
         reference?: string;
+        notes?: string;
+        paidAt?: string;
     }): Promise<InvoicePayment>;
     getInvoicePayments(tenantId: string, invoiceId: string): Promise<InvoicePayment[]>;
     removeInvoice(tenantId: string, id: string): Promise<void>;

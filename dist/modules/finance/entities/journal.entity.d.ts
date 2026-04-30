@@ -21,7 +21,8 @@ export declare class JournalEntry extends TenantBaseEntity {
 export declare class InvoicePayment extends TenantBaseEntity {
     invoiceId: string;
     amount: number;
-    paidAt: Date;
+    paidAt: Date | null;
     method: string | null;
     reference: string | null;
+    notes: string | null;
 }

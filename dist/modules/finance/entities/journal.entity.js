@@ -80,6 +80,7 @@ let InvoicePayment = class InvoicePayment extends base_entity_1.TenantBaseEntity
     paidAt;
     method;
     reference;
+    notes;
 };
 exports.InvoicePayment = InvoicePayment;
 __decorate([
@@ -91,8 +92,8 @@ __decorate([
     __metadata("design:type", Number)
 ], InvoicePayment.prototype, "amount", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'paid_at', type: 'timestamptz' }),
-    __metadata("design:type", Date)
+    (0, typeorm_1.Column)({ name: 'paid_at', type: 'timestamptz', nullable: true }),
+    __metadata("design:type", Object)
 ], InvoicePayment.prototype, "paidAt", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
@@ -102,6 +103,10 @@ __decorate([
     (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
     __metadata("design:type", Object)
 ], InvoicePayment.prototype, "reference", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
+    __metadata("design:type", Object)
+], InvoicePayment.prototype, "notes", void 0);
 exports.InvoicePayment = InvoicePayment = __decorate([
     (0, typeorm_1.Entity)('invoice_payments')
 ], InvoicePayment);
