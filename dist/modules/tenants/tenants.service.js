@@ -17,10 +17,13 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const tenant_entity_1 = require("./entities/tenant.entity");
+const branch_entity_1 = require("./entities/branch.entity");
 let TenantsService = class TenantsService {
     repo;
-    constructor(repo) {
+    branchRepo;
+    constructor(repo, branchRepo) {
         this.repo = repo;
+        this.branchRepo = branchRepo;
     }
     async getCompany(tenantId) {
         const t = await this.repo.findOne({ where: { id: tenantId } });
@@ -32,11 +35,26 @@ let TenantsService = class TenantsService {
         await this.repo.update({ id: tenantId }, dto);
         return this.getCompany(tenantId);
     }
+    findBranches(tenantId) {
+        return this.branchRepo.find({ where: { tenantId }, order: { isHQ: 'DESC', name: 'ASC' } });
+    }
+    createBranch(tenantId, userId, dto) {
+        return this.branchRepo.save(this.branchRepo.create({ ...dto, tenantId, createdBy: userId }));
+    }
+    async updateBranch(tenantId, id, dto) {
+        await this.branchRepo.update({ id, tenantId }, dto);
+        return this.branchRepo.findOne({ where: { id, tenantId } });
+    }
+    async removeBranch(tenantId, id) {
+        await this.branchRepo.softDelete({ id, tenantId });
+    }
 };
 exports.TenantsService = TenantsService;
 exports.TenantsService = TenantsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(tenant_entity_1.Tenant)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __param(1, (0, typeorm_1.InjectRepository)(branch_entity_1.Branch)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository])
 ], TenantsService);
 //# sourceMappingURL=tenants.service.js.map

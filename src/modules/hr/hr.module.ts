@@ -7,11 +7,12 @@ import { PayrollRun, PayrollItem } from './entities/payroll.entity';
 import { Department } from './entities/department.entity';
 import { JobPosting, Applicant } from './entities/job-posting.entity';
 import { LeaveType } from './entities/leave-type.entity';
+import { Payslip } from './entities/payslip.entity';
 import { HrService } from './hr.service';
 import { HrController } from './hr.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Employee, Attendance, Leave, PayrollRun, PayrollItem, Department, JobPosting, Applicant, LeaveType])],
+  imports: [TypeOrmModule.forFeature([Employee, Attendance, Leave, PayrollRun, PayrollItem, Department, JobPosting, Applicant, LeaveType, Payslip])],
   controllers: [HrController],
   providers: [HrService],
   exports: [HrService],

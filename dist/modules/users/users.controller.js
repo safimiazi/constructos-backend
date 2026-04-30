@@ -25,6 +25,9 @@ let UsersController = class UsersController {
     getProfile(u) {
         return this.svc.getProfile(u.sub);
     }
+    changePassword(u, dto) {
+        return this.svc.changePassword(u.sub, dto.currentPassword, dto.newPassword);
+    }
     findAll(u, q) {
         return this.svc.findAll(u.tenantId, q);
     }
@@ -40,6 +43,9 @@ let UsersController = class UsersController {
     remove(u, id) {
         return this.svc.remove(u.tenantId, id);
     }
+    getRoles(u) { return this.svc.findRoles(u.tenantId); }
+    createRole(u, dto) { return this.svc.createRole(u.tenantId, u.sub, dto); }
+    updateRole(u, id, dto) { return this.svc.updateRole(u.tenantId, id, dto); }
 };
 exports.UsersController = UsersController;
 __decorate([
@@ -49,6 +55,15 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "getProfile", null);
+__decorate([
+    (0, common_1.Patch)('me/change-password'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "changePassword", null);
 __decorate([
     (0, common_1.Get)(),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
@@ -91,6 +106,30 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Get)('roles'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "getRoles", null);
+__decorate([
+    (0, common_1.Post)('roles'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "createRole", null);
+__decorate([
+    (0, common_1.Patch)('roles/:id'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "updateRole", null);
 exports.UsersController = UsersController = __decorate([
     (0, swagger_1.ApiTags)('Users'),
     (0, swagger_1.ApiBearerAuth)(),

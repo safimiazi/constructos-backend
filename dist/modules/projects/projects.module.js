@@ -14,6 +14,10 @@ const task_entity_1 = require("./entities/task.entity");
 const daily_log_entity_1 = require("./entities/daily-log.entity");
 const milestone_entity_1 = require("./entities/milestone.entity");
 const issue_entity_1 = require("./entities/issue.entity");
+const task_dependency_entity_1 = require("./entities/task-dependency.entity");
+const subcontract_entity_1 = require("./entities/subcontract.entity");
+const risk_entity_1 = require("./entities/risk.entity");
+const defect_entity_1 = require("./entities/defect.entity");
 const projects_service_1 = require("./projects.service");
 const projects_controller_1 = require("./projects.controller");
 let ProjectsModule = class ProjectsModule {
@@ -21,7 +25,7 @@ let ProjectsModule = class ProjectsModule {
 exports.ProjectsModule = ProjectsModule;
 exports.ProjectsModule = ProjectsModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([project_entity_1.Project, task_entity_1.Task, daily_log_entity_1.DailyLog, milestone_entity_1.Milestone, issue_entity_1.Issue])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([project_entity_1.Project, task_entity_1.Task, daily_log_entity_1.DailyLog, milestone_entity_1.Milestone, issue_entity_1.Issue, task_dependency_entity_1.TaskDependency, subcontract_entity_1.Subcontract, risk_entity_1.Risk, defect_entity_1.Defect])],
         controllers: [projects_controller_1.ProjectsController],
         providers: [projects_service_1.ProjectsService],
         exports: [projects_service_1.ProjectsService],

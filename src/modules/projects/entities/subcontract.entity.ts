@@ -8,14 +8,17 @@ export class Subcontract extends TenantBaseEntity {
   @Column({ name: 'project_id', type: 'uuid' })
   projectId: string;
 
-  @Column({ name: 'vendor_id', type: 'uuid' })
-  vendorId: string;
+  @Column({ name: 'vendor_id', type: 'uuid', nullable: true })
+  vendorId: string | null;
 
-  @Column({ type: 'text' })
-  scope: string;
+  @Column({ name: 'subcontractor_name', type: 'varchar', length: 200, nullable: true })
+  subcontractorName: string | null;
 
-  @Column({ type: 'numeric', precision: 15, scale: 2 })
-  value: number;
+  @Column({ type: 'text', nullable: true })
+  scope: string | null;
+
+  @Column({ name: 'contract_value', type: 'numeric', precision: 15, scale: 2, default: 0 })
+  contractValue: number;
 
   @Column({ name: 'start_date', type: 'date', nullable: true })
   startDate: Date | null;

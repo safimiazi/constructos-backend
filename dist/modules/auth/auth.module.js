@@ -17,6 +17,8 @@ const auth_service_1 = require("./auth.service");
 const jwt_strategy_1 = require("./strategies/jwt.strategy");
 const user_entity_1 = require("../users/entities/user.entity");
 const tenant_entity_1 = require("../tenants/entities/tenant.entity");
+const subscription_entity_1 = require("../billing/entities/subscription.entity");
+const plan_entity_1 = require("../billing/entities/plan.entity");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -31,7 +33,7 @@ exports.AuthModule = AuthModule = __decorate([
                     signOptions: { expiresIn: config.get('JWT_EXPIRES_IN', '15m') },
                 }),
             }),
-            typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, tenant_entity_1.Tenant]),
+            typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, tenant_entity_1.Tenant, subscription_entity_1.Subscription, plan_entity_1.Plan]),
         ],
         controllers: [auth_controller_1.AuthController],
         providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy],

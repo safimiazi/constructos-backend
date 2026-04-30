@@ -8,14 +8,27 @@ const app_module_1 = require("./app.module");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     const config = app.get(config_1.ConfigService);
+    if (config.get('NODE_ENV') === 'production') {
+        const jwtSecret = config.get('JWT_SECRET', '');
+        if (!jwtSecret || jwtSecret.includes('fallback') || jwtSecret.includes('CHANGE_THIS')) {
+            console.error('FATAL: JWT_SECRET is not set or is using a default value. Set a strong secret before running in production.');
+            process.exit(1);
+        }
+    }
     app.setGlobalPrefix(config.get('API_PREFIX', 'v1'));
+    const allowedOrigins = config.get('CORS_ORIGIN', 'http://localhost:3000').split(',');
     app.enableCors({
-        origin: config.get('CORS_ORIGIN', 'http://localhost:3000'),
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.includes(origin))
+                callback(null, true);
+            else
+                callback(new Error('Not allowed by CORS'));
+        },
         credentials: true,
     });
     app.useGlobalPipes(new common_1.ValidationPipe({
         whitelist: true,
-        forbidNonWhitelisted: true,
+        forbidNonWhitelisted: false,
         transform: true,
     }));
     if (config.get('NODE_ENV') !== 'production') {

@@ -13,6 +13,8 @@ const invoice_entity_1 = require("./entities/invoice.entity");
 const budget_entity_1 = require("./entities/budget.entity");
 const bank_account_entity_1 = require("./entities/bank-account.entity");
 const journal_entity_1 = require("./entities/journal.entity");
+const tax_entity_1 = require("./entities/tax.entity");
+const bank_transaction_entity_1 = require("./entities/bank-transaction.entity");
 const finance_service_1 = require("./finance.service");
 const finance_controller_1 = require("./finance.controller");
 let FinanceModule = class FinanceModule {
@@ -20,7 +22,7 @@ let FinanceModule = class FinanceModule {
 exports.FinanceModule = FinanceModule;
 exports.FinanceModule = FinanceModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([invoice_entity_1.Invoice, budget_entity_1.Budget, bank_account_entity_1.BankAccount, journal_entity_1.ChartOfAccount, journal_entity_1.JournalEntry, journal_entity_1.InvoicePayment])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([invoice_entity_1.Invoice, budget_entity_1.Budget, bank_account_entity_1.BankAccount, journal_entity_1.ChartOfAccount, journal_entity_1.JournalEntry, journal_entity_1.InvoicePayment, tax_entity_1.TaxRate, tax_entity_1.ExpenseClaim, bank_transaction_entity_1.BankTransaction])],
         controllers: [finance_controller_1.FinanceController],
         providers: [finance_service_1.FinanceService],
         exports: [finance_service_1.FinanceService],

@@ -18,6 +18,7 @@ const swagger_1 = require("@nestjs/swagger");
 const superadmin_service_1 = require("./superadmin.service");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
 const public_decorator_1 = require("../../common/decorators/public.decorator");
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const jwt_payload_interface_1 = require("../../common/interfaces/jwt-payload.interface");
 let SuperadminController = class SuperadminController {
     svc;
@@ -27,6 +28,9 @@ let SuperadminController = class SuperadminController {
     getStats() { return this.svc.getDashboardStats(); }
     getBillingOverview() { return this.svc.getBillingOverview(); }
     getGrowth() { return this.svc.getGrowthAnalytics(); }
+    getTenantStatus() { return this.svc.getTenantStatusBreakdown(); }
+    getPlanDist() { return this.svc.getPlanDistribution(); }
+    getTopTenants() { return this.svc.getTopTenants(); }
     findTenants(q) { return this.svc.findTenants(q); }
     createTenant(dto) { return this.svc.createTenant(dto); }
     findTenant(id) { return this.svc.findTenant(id); }
@@ -36,11 +40,16 @@ let SuperadminController = class SuperadminController {
     createPlan(dto) { return this.svc.createPlan(dto); }
     updatePlan(id, dto) { return this.svc.updatePlan(id, dto); }
     findAllUsers(q) { return this.svc.findAllUsers(q); }
+    getActiveAnnouncements() { return this.svc.getActiveAnnouncements(); }
+    getAnnouncementsForTenant(user) {
+        if (!user?.tenantId)
+            throw new Error('No tenant context');
+        return this.svc.getActiveAnnouncementsForTenant(user.tenantId);
+    }
     findAnnouncements() { return this.svc.findAnnouncements(); }
     createAnnouncement(dto) { return this.svc.createAnnouncement(dto); }
     updateAnnouncement(id, dto) { return this.svc.updateAnnouncement(id, dto); }
     deleteAnnouncement(id) { return this.svc.deleteAnnouncement(id); }
-    getActiveAnnouncements() { return this.svc.getActiveAnnouncements(); }
 };
 exports.SuperadminController = SuperadminController;
 __decorate([
@@ -64,6 +73,27 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], SuperadminController.prototype, "getGrowth", null);
+__decorate([
+    (0, common_1.Get)('analytics/tenant-status'),
+    (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], SuperadminController.prototype, "getTenantStatus", null);
+__decorate([
+    (0, common_1.Get)('analytics/plan-distribution'),
+    (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], SuperadminController.prototype, "getPlanDist", null);
+__decorate([
+    (0, common_1.Get)('analytics/top-tenants'),
+    (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], SuperadminController.prototype, "getTopTenants", null);
 __decorate([
     (0, common_1.Get)('tenants'),
     (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
@@ -138,6 +168,20 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], SuperadminController.prototype, "findAllUsers", null);
 __decorate([
+    (0, public_decorator_1.Public)(),
+    (0, common_1.Get)('announcements/active'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], SuperadminController.prototype, "getActiveAnnouncements", null);
+__decorate([
+    (0, common_1.Get)('announcements/tenant'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], SuperadminController.prototype, "getAnnouncementsForTenant", null);
+__decorate([
     (0, common_1.Get)('announcements'),
     (0, roles_decorator_1.Roles)(jwt_payload_interface_1.UserRole.SUPERADMIN),
     __metadata("design:type", Function),
@@ -170,13 +214,6 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], SuperadminController.prototype, "deleteAnnouncement", null);
-__decorate([
-    (0, public_decorator_1.Public)(),
-    (0, common_1.Get)('announcements/active'),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], SuperadminController.prototype, "getActiveAnnouncements", null);
 exports.SuperadminController = SuperadminController = __decorate([
     (0, swagger_1.ApiTags)('SuperAdmin'),
     (0, swagger_1.ApiBearerAuth)(),

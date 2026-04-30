@@ -32,6 +32,10 @@ let ProjectsController = class ProjectsController {
     createTask(u, id, dto) { return this.svc.createTask(u.tenantId, id, u.sub, dto); }
     updateTask(u, taskId, dto) { return this.svc.updateTask(u.tenantId, taskId, dto); }
     removeTask(u, taskId) { return this.svc.removeTask(u.tenantId, taskId); }
+    getDeps(u, taskId) { return this.svc.getTaskDependencies(u.tenantId, taskId); }
+    createDep(u, taskId, dto) { return this.svc.createDependency(u.tenantId, u.sub, { ...dto, taskId }); }
+    removeDep(u, depId) { return this.svc.removeDependency(u.tenantId, depId); }
+    getGantt(u, id) { return this.svc.getGanttData(u.tenantId, id); }
     getLogs(u, id) { return this.svc.getLogs(u.tenantId, id); }
     createLog(u, id, dto) { return this.svc.createLog(u.tenantId, id, u.sub, dto); }
     getMilestones(u, id) { return this.svc.getMilestones(u.tenantId, id); }
@@ -41,6 +45,17 @@ let ProjectsController = class ProjectsController {
     getIssues(u, id, q) { return this.svc.getIssues(u.tenantId, id, q); }
     createIssue(u, id, dto) { return this.svc.createIssue(u.tenantId, id, u.sub, dto); }
     updateIssue(u, iid, dto) { return this.svc.updateIssue(u.tenantId, iid, dto); }
+    getSubs(u, id) { return this.svc.getSubcontracts(u.tenantId, id); }
+    createSub(u, id, dto) { return this.svc.createSubcontract(u.tenantId, u.sub, { ...dto, projectId: id }); }
+    updateSub(u, sid, dto) { return this.svc.updateSubcontract(u.tenantId, sid, dto); }
+    getRisks(u, id) { return this.svc.getRisks(u.tenantId, id); }
+    createRisk(u, id, dto) { return this.svc.createRisk(u.tenantId, u.sub, { ...dto, projectId: id }); }
+    updateRisk(u, rid, dto) { return this.svc.updateRisk(u.tenantId, rid, dto); }
+    getDefects(u, id, q) { return this.svc.getDefects(u.tenantId, id, q); }
+    createDefect(u, id, dto) { return this.svc.createDefect(u.tenantId, id, u.sub, dto); }
+    updateDefect(u, did, dto) { return this.svc.updateDefect(u.tenantId, did, dto); }
+    removeDefect(u, did) { return this.svc.removeDefect(u.tenantId, did); }
+    getCostReport(u, id) { return this.svc.getProjectCostReport(u.tenantId, id); }
 };
 exports.ProjectsController = ProjectsController;
 __decorate([
@@ -128,6 +143,40 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ProjectsController.prototype, "removeTask", null);
 __decorate([
+    (0, common_1.Get)(':id/tasks/:taskId/dependencies'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('taskId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "getDeps", null);
+__decorate([
+    (0, common_1.Post)(':id/tasks/:taskId/dependencies'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('taskId')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "createDep", null);
+__decorate([
+    (0, common_1.Delete)(':id/tasks/:taskId/dependencies/:depId'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('depId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "removeDep", null);
+__decorate([
+    (0, common_1.Get)(':id/gantt'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "getGantt", null);
+__decorate([
     (0, common_1.Get)(':id/daily-logs'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
@@ -206,6 +255,102 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", void 0)
 ], ProjectsController.prototype, "updateIssue", null);
+__decorate([
+    (0, common_1.Get)(':id/subcontracts'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "getSubs", null);
+__decorate([
+    (0, common_1.Post)(':id/subcontracts'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "createSub", null);
+__decorate([
+    (0, common_1.Patch)(':id/subcontracts/:sid'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('sid')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "updateSub", null);
+__decorate([
+    (0, common_1.Get)(':id/risks'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "getRisks", null);
+__decorate([
+    (0, common_1.Post)(':id/risks'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "createRisk", null);
+__decorate([
+    (0, common_1.Patch)(':id/risks/:rid'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('rid')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "updateRisk", null);
+__decorate([
+    (0, common_1.Get)(':id/defects'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "getDefects", null);
+__decorate([
+    (0, common_1.Post)(':id/defects'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "createDefect", null);
+__decorate([
+    (0, common_1.Patch)(':id/defects/:did'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('did')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "updateDefect", null);
+__decorate([
+    (0, common_1.Delete)(':id/defects/:did'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('did')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "removeDefect", null);
+__decorate([
+    (0, common_1.Get)(':id/cost-report'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "getCostReport", null);
 exports.ProjectsController = ProjectsController = __decorate([
     (0, swagger_1.ApiTags)('Projects'),
     (0, swagger_1.ApiBearerAuth)(),

@@ -114,4 +114,41 @@ export class ProcurementService {
     await this.invRepo.update({ id, tenantId }, { qtyInHand: Number(item.qtyInHand) - qty, location: toLocation });
     return this.invRepo.findOne({ where: { id, tenantId } });
   }
+
+  // 3-Way Match
+  async createThreeWayMatch(tenantId: string, userId: string, dto: { poId: string; grnId: string; invoiceId: string }) {
+    const po = await this.poRepo.findOne({ where: { id: dto.poId, tenantId } });
+    const grn = await this.grnRepo.findOne({ where: { id: dto.grnId, tenantId } });
+    if (!po || !grn) throw new NotFoundException('PO or GRN not found');
+    const poAmount = Number(po.totalCost);
+    // Calculate GRN amount using actual unit prices from PO items
+    const poItems: any[] = po.items ?? [];
+    const grnAmount = grn.items.reduce((s: number, gi: any) => {
+      const poItem = poItems.find((pi: any) => pi.description === gi.description || pi.itemCode === gi.itemCode);
+      const unitCost = poItem ? Number(poItem.unitCost) : (poAmount / Math.max(poItems.length, 1));
+      return s + (Number(gi.qtyAccepted) * unitCost);
+    }, 0);
+    const invoiceAmount = dto.invoiceId ? poAmount : 0; // invoice amount defaults to PO amount if not fetched
+    const tolerance = 0.05; // 5% tolerance
+    const poGrnDiff = Math.abs(poAmount - grnAmount) / Math.max(poAmount, 1);
+    const status = poGrnDiff <= tolerance ? MatchStatus.MATCHED : MatchStatus.DISCREPANCY;
+    const discrepancyNotes = status === MatchStatus.DISCREPANCY
+      ? `PO: ৳${poAmount.toFixed(2)}, GRN: ৳${grnAmount.toFixed(2)}, Diff: ${(poGrnDiff * 100).toFixed(1)}%`
+      : null;
+    return this.matchRepo.save(this.matchRepo.create({ ...dto, tenantId, poAmount, grnAmount, invoiceAmount, status, discrepancyNotes, createdBy: userId }));
+  }
+
+  findMatches(tenantId: string) { return this.matchRepo.find({ where: { tenantId }, order: { createdAt: 'DESC' } }); }
+
+  getSpendAnalytics(tenantId: string) {
+    return this.poRepo.createQueryBuilder('p')
+      .leftJoin('vendors', 'v', 'v.id = p.vendor_id')
+      .select('p.vendor_id', 'vendorId')
+      .addSelect('COALESCE(v.name, p.vendor_id)', 'vendorName')
+      .addSelect('SUM(p.total_cost)', 'totalSpend')
+      .addSelect('COUNT(*)', 'poCount')
+      .where('p.tenant_id = :tenantId AND p.deleted_at IS NULL', { tenantId })
+      .groupBy('p.vendor_id').addGroupBy('v.name')
+      .orderBy('SUM(p.total_cost)', 'DESC').limit(10).getRawMany();
+  }
 }

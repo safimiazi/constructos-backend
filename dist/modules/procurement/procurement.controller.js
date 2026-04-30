@@ -45,6 +45,9 @@ let ProcurementController = class ProcurementController {
     createItem(u, dto) { return this.svc.createInventoryItem(u.tenantId, u.sub, dto); }
     updateItem(u, id, dto) { return this.svc.updateInventoryItem(u.tenantId, id, dto); }
     transferStock(u, dto) { return this.svc.transferStock(u.tenantId, dto.id, dto.qty, dto.toLocation); }
+    findMatches(u) { return this.svc.findMatches(u.tenantId); }
+    createMatch(u, dto) { return this.svc.createThreeWayMatch(u.tenantId, u.sub, dto); }
+    getSpend(u) { return this.svc.getSpendAnalytics(u.tenantId); }
 };
 exports.ProcurementController = ProcurementController;
 __decorate([
@@ -236,6 +239,28 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], ProcurementController.prototype, "transferStock", null);
+__decorate([
+    (0, common_1.Get)('three-way-match'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ProcurementController.prototype, "findMatches", null);
+__decorate([
+    (0, common_1.Post)('three-way-match'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], ProcurementController.prototype, "createMatch", null);
+__decorate([
+    (0, common_1.Get)('analytics/spend'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ProcurementController.prototype, "getSpend", null);
 exports.ProcurementController = ProcurementController = __decorate([
     (0, swagger_1.ApiTags)('Procurement'),
     (0, swagger_1.ApiBearerAuth)(),

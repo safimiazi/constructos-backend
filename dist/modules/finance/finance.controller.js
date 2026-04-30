@@ -22,8 +22,8 @@ let FinanceController = class FinanceController {
     constructor(svc) {
         this.svc = svc;
     }
-    findInvoices(u, q) { return this.svc.findInvoices(u.tenantId, q); }
     getStats(u) { return this.svc.getDashboardStats(u.tenantId); }
+    findInvoices(u, q) { return this.svc.findInvoices(u.tenantId, q); }
     createInvoice(u, dto) { return this.svc.createInvoice(u.tenantId, u.sub, dto); }
     findInvoice(u, id) { return this.svc.findInvoice(u.tenantId, id); }
     updateInvoice(u, id, dto) { return this.svc.updateInvoice(u.tenantId, id, dto); }
@@ -36,18 +36,37 @@ let FinanceController = class FinanceController {
     findJournals(u, q) { return this.svc.findJournals(u.tenantId, q); }
     createJournal(u, dto) { return this.svc.createJournal(u.tenantId, u.sub, dto); }
     postJournal(u, id) { return this.svc.postJournal(u.tenantId, id); }
-    findBudgets(u, pid) { return this.svc.findBudgets(u.tenantId, pid); }
     getBudgetSummary(u, pid) { return this.svc.getBudgetSummary(u.tenantId, pid); }
+    findBudgets(u, pid) { return this.svc.findBudgets(u.tenantId, pid); }
     createBudget(u, dto) { return this.svc.createBudget(u.tenantId, u.sub, dto); }
     updateBudget(u, id, dto) { return this.svc.updateBudget(u.tenantId, id, dto); }
     removeBudget(u, id) { return this.svc.removeBudget(u.tenantId, id); }
     findBankAccounts(u) { return this.svc.findBankAccounts(u.tenantId); }
     createBankAccount(u, dto) { return this.svc.createBankAccount(u.tenantId, u.sub, dto); }
     updateBankAccount(u, id, dto) { return this.svc.updateBankAccount(u.tenantId, id, dto); }
+    findTx(u, id) { return this.svc.findTransactions(u.tenantId, id); }
+    createTx(u, id, dto) { return this.svc.createTransaction(u.tenantId, u.sub, { ...dto, bankAccountId: id }); }
+    reconcile(u, txId, dto) { return this.svc.reconcileTransaction(u.tenantId, txId, dto.invoiceId); }
+    getRecon(u, id) { return this.svc.getReconciliationSummary(u.tenantId, id); }
+    findTaxRates(u) { return this.svc.findTaxRates(u.tenantId); }
+    createTaxRate(u, dto) { return this.svc.createTaxRate(u.tenantId, u.sub, dto); }
+    updateTaxRate(u, id, dto) { return this.svc.updateTaxRate(u.tenantId, id, dto); }
+    findExpenses(u, q) { return this.svc.findExpenses(u.tenantId, q); }
+    createExpense(u, dto) { return this.svc.createExpense(u.tenantId, u.sub, dto); }
+    approveExpense(u, id) { return this.svc.approveExpense(u.tenantId, id, u.sub); }
+    rejectExpense(u, id) { return this.svc.rejectExpense(u.tenantId, id); }
     getPL(u, sd, ed) { return this.svc.getPLReport(u.tenantId, sd, ed); }
     getCashflow(u) { return this.svc.getCashflowReport(u.tenantId); }
+    getBalanceSheet(u) { return this.svc.getBalanceSheet(u.tenantId); }
 };
 exports.FinanceController = FinanceController;
+__decorate([
+    (0, common_1.Get)('invoices/stats'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "getStats", null);
 __decorate([
     (0, common_1.Get)('invoices'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
@@ -56,13 +75,6 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], FinanceController.prototype, "findInvoices", null);
-__decorate([
-    (0, common_1.Get)('invoices/stats'),
-    __param(0, (0, current_user_decorator_1.CurrentUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
-], FinanceController.prototype, "getStats", null);
 __decorate([
     (0, common_1.Post)('invoices'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
@@ -163,14 +175,6 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], FinanceController.prototype, "postJournal", null);
 __decorate([
-    (0, common_1.Get)('budgets/:projectId'),
-    __param(0, (0, current_user_decorator_1.CurrentUser)()),
-    __param(1, (0, common_1.Param)('projectId')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", void 0)
-], FinanceController.prototype, "findBudgets", null);
-__decorate([
     (0, common_1.Get)('budgets/:projectId/summary'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('projectId')),
@@ -178,6 +182,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], FinanceController.prototype, "getBudgetSummary", null);
+__decorate([
+    (0, common_1.Get)('budgets/:projectId'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('projectId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "findBudgets", null);
 __decorate([
     (0, common_1.Post)('budgets'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
@@ -229,6 +241,96 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], FinanceController.prototype, "updateBankAccount", null);
 __decorate([
+    (0, common_1.Get)('bank-accounts/:id/transactions'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "findTx", null);
+__decorate([
+    (0, common_1.Post)('bank-accounts/:id/transactions'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "createTx", null);
+__decorate([
+    (0, common_1.Patch)('bank-accounts/:id/transactions/:txId/reconcile'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('txId')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "reconcile", null);
+__decorate([
+    (0, common_1.Get)('bank-accounts/:id/reconciliation'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "getRecon", null);
+__decorate([
+    (0, common_1.Get)('tax-rates'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "findTaxRates", null);
+__decorate([
+    (0, common_1.Post)('tax-rates'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "createTaxRate", null);
+__decorate([
+    (0, common_1.Patch)('tax-rates/:id'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "updateTaxRate", null);
+__decorate([
+    (0, common_1.Get)('expenses'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "findExpenses", null);
+__decorate([
+    (0, common_1.Post)('expenses'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "createExpense", null);
+__decorate([
+    (0, common_1.Patch)('expenses/:id/approve'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "approveExpense", null);
+__decorate([
+    (0, common_1.Patch)('expenses/:id/reject'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "rejectExpense", null);
+__decorate([
     (0, common_1.Get)('reports/pl'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Query)('startDate')),
@@ -244,6 +346,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], FinanceController.prototype, "getCashflow", null);
+__decorate([
+    (0, common_1.Get)('reports/balance-sheet'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], FinanceController.prototype, "getBalanceSheet", null);
 exports.FinanceController = FinanceController = __decorate([
     (0, swagger_1.ApiTags)('Finance'),
     (0, swagger_1.ApiBearerAuth)(),

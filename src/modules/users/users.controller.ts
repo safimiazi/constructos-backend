@@ -15,6 +15,12 @@ export class UsersController {
     return this.svc.getProfile(u.sub);
   }
 
+  @Patch('me/change-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  changePassword(@CurrentUser() u: JwtPayload, @Body() dto: { currentPassword: string; newPassword: string }) {
+    return this.svc.changePassword(u.sub, dto.currentPassword, dto.newPassword);
+  }
+
   @Get()
   findAll(@CurrentUser() u: JwtPayload, @Query() q: any) {
     return this.svc.findAll(u.tenantId!, q);
@@ -40,4 +46,9 @@ export class UsersController {
   remove(@CurrentUser() u: JwtPayload, @Param('id') id: string) {
     return this.svc.remove(u.tenantId!, id);
   }
+
+  // Custom Roles
+  @Get('roles') getRoles(@CurrentUser() u: JwtPayload) { return this.svc.findRoles(u.tenantId!); }
+  @Post('roles') createRole(@CurrentUser() u: JwtPayload, @Body() dto: any) { return this.svc.createRole(u.tenantId!, u.sub, dto); }
+  @Patch('roles/:id') updateRole(@CurrentUser() u: JwtPayload, @Param('id') id: string, @Body() dto: any) { return this.svc.updateRole(u.tenantId!, id, dto); }
 }

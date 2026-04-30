@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
+const throttler_1 = require("@nestjs/throttler");
 const auth_service_1 = require("./auth.service");
 const auth_dto_1 = require("./dto/auth.dto");
 const public_decorator_1 = require("../../common/decorators/public.decorator");
@@ -33,8 +34,11 @@ let AuthController = class AuthController {
     logout(userId) {
         return this.authService.logout(userId);
     }
-    refresh(userId) {
-        return this.authService.refreshToken(userId);
+    refresh(body) {
+        if (!body?.refreshToken) {
+            throw new common_1.UnauthorizedException('Refresh token required');
+        }
+        return this.authService.refreshFromToken(body.refreshToken);
     }
     forgotPassword(dto) {
         return this.authService.forgotPassword(dto.email);
@@ -47,6 +51,7 @@ exports.AuthController = AuthController;
 __decorate([
     (0, public_decorator_1.Public)(),
     (0, common_1.Post)('register'),
+    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60000 } }),
     (0, swagger_1.ApiOperation)({ summary: 'Register new tenant + owner account' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -57,6 +62,7 @@ __decorate([
     (0, public_decorator_1.Public)(),
     (0, common_1.Post)('login'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, throttler_1.Throttle)({ default: { limit: 10, ttl: 60000 } }),
     (0, swagger_1.ApiOperation)({ summary: 'Login — returns access + refresh tokens' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -75,15 +81,17 @@ __decorate([
     (0, public_decorator_1.Public)(),
     (0, common_1.Post)('refresh'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    __param(0, (0, current_user_decorator_1.CurrentUser)('sub')),
+    (0, throttler_1.Throttle)({ default: { limit: 20, ttl: 60000 } }),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "refresh", null);
 __decorate([
     (0, public_decorator_1.Public)(),
     (0, common_1.Post)('forgot-password'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, throttler_1.Throttle)({ default: { limit: 3, ttl: 60000 } }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [auth_dto_1.ForgotPasswordDto]),
@@ -93,6 +101,7 @@ __decorate([
     (0, public_decorator_1.Public)(),
     (0, common_1.Post)('reset-password'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60000 } }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [auth_dto_1.ResetPasswordDto]),

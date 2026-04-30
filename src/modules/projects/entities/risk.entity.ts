@@ -15,8 +15,8 @@ export class Risk extends TenantBaseEntity {
   @Column({ type: 'text', nullable: true })
   description: string | null;
 
-  @Column({ type: 'enum', enum: RiskLevel })
-  probability: RiskLevel;
+  @Column({ type: 'enum', enum: RiskLevel, name: 'likelihood' })
+  likelihood: RiskLevel;
 
   @Column({ type: 'enum', enum: RiskLevel })
   impact: RiskLevel;

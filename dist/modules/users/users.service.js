@@ -51,10 +51,13 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const bcrypt = __importStar(require("bcryptjs"));
 const user_entity_1 = require("./entities/user.entity");
+const role_permission_entity_1 = require("./entities/role-permission.entity");
 let UsersService = class UsersService {
     repo;
-    constructor(repo) {
+    roleRepo;
+    constructor(repo, roleRepo) {
         this.repo = repo;
+        this.roleRepo = roleRepo;
     }
     findAll(tenantId, q) {
         const { search, role, page = 1, limit = 20 } = q;
@@ -113,11 +116,26 @@ let UsersService = class UsersService {
         const { passwordHash, refreshTokenHash, ...rest } = u;
         return rest;
     }
+    findRoles(tenantId) { return this.roleRepo.find({ where: { tenantId, isActive: true }, order: { name: 'ASC' } }); }
+    createRole(tenantId, userId, dto) { return this.roleRepo.save(this.roleRepo.create({ ...dto, tenantId, createdBy: userId })); }
+    async updateRole(tenantId, id, dto) { await this.roleRepo.update({ id, tenantId }, dto); return this.roleRepo.findOne({ where: { id, tenantId } }); }
+    async changePassword(userId, currentPassword, newPassword) {
+        const u = await this.repo.findOne({ where: { id: userId } });
+        if (!u)
+            throw new common_1.NotFoundException('User not found');
+        const valid = await u.validatePassword(currentPassword);
+        if (!valid)
+            throw new common_1.UnauthorizedException('Current password is incorrect');
+        u.passwordHash = await bcrypt.hash(newPassword, 12);
+        await this.repo.save(u);
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __param(1, (0, typeorm_1.InjectRepository)(role_permission_entity_1.CustomRole)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

@@ -22,39 +22,114 @@ let HrController = class HrController {
     constructor(svc) {
         this.svc = svc;
     }
-    findEmployees(u, q) { return this.svc.findEmployees(u.tenantId, q); }
-    createEmployee(u, dto) { return this.svc.createEmployee(u.tenantId, u.sub, dto); }
-    findEmployee(u, id) { return this.svc.findEmployee(u.tenantId, id); }
-    updateEmployee(u, id, dto) { return this.svc.updateEmployee(u.tenantId, id, dto); }
-    removeEmployee(u, id) { return this.svc.removeEmployee(u.tenantId, id); }
-    findDepts(u) { return this.svc.findDepartments(u.tenantId); }
-    createDept(u, dto) { return this.svc.createDepartment(u.tenantId, u.sub, dto); }
-    updateDept(u, id, dto) { return this.svc.updateDepartment(u.tenantId, id, dto); }
-    removeDept(u, id) { return this.svc.removeDepartment(u.tenantId, id); }
-    findAttendance(u, q) { return this.svc.findAttendance(u.tenantId, q); }
-    getAttSummary(u, month) { return this.svc.getAttendanceSummary(u.tenantId, month); }
-    createAttendance(u, dto) { return this.svc.createAttendance(u.tenantId, u.sub, dto); }
-    clockIn(u, dto) { return this.svc.clockIn(u.tenantId, dto.employeeId, u.sub, dto.location); }
-    clockOut(u, dto) { return this.svc.clockOut(u.tenantId, dto.employeeId, dto.location); }
-    updateAttendance(u, id, dto) { return this.svc.updateAttendance(u.tenantId, id, dto); }
-    findLeaveTypes(u) { return this.svc.findLeaveTypes(u.tenantId); }
-    createLeaveType(u, dto) { return this.svc.createLeaveType(u.tenantId, u.sub, dto); }
-    updateLeaveType(u, id, dto) { return this.svc.updateLeaveType(u.tenantId, id, dto); }
-    findLeaves(u, q) { return this.svc.findLeaves(u.tenantId, q); }
-    createLeave(u, dto) { return this.svc.createLeave(u.tenantId, u.sub, dto); }
-    approveLeave(u, id) { return this.svc.approveLeave(u.tenantId, id, u.sub); }
-    rejectLeave(u, id, dto) { return this.svc.rejectLeave(u.tenantId, id, dto.reason); }
-    findPayrollRuns(u) { return this.svc.findPayrollRuns(u.tenantId); }
-    createPayrollRun(u, dto) { return this.svc.createPayrollRun(u.tenantId, u.sub, dto.payPeriod); }
-    getPayrollItems(u, id) { return this.svc.getPayrollItems(u.tenantId, id); }
-    updatePayrollItem(u, id, dto) { return this.svc.updatePayrollItem(u.tenantId, id, dto); }
-    approvePayrollRun(u, id) { return this.svc.approvePayrollRun(u.tenantId, id, u.sub); }
-    findJobs(u) { return this.svc.findJobs(u.tenantId); }
-    createJob(u, dto) { return this.svc.createJob(u.tenantId, u.sub, dto); }
-    updateJob(u, id, dto) { return this.svc.updateJob(u.tenantId, id, dto); }
-    findApplicants(u, id) { return this.svc.findApplicants(u.tenantId, id); }
-    createApplicant(u, id, dto) { return this.svc.createApplicant(u.tenantId, u.sub, { ...dto, jobId: id }); }
-    moveStage(u, id, dto) { return this.svc.moveApplicantStage(u.tenantId, id, dto.stage); }
+    findEmployees(u, q) {
+        return this.svc.findEmployees(u.tenantId, q);
+    }
+    createEmployee(u, dto) {
+        return this.svc.createEmployee(u.tenantId, u.sub, dto);
+    }
+    findEmployee(u, id) {
+        return this.svc.findEmployee(u.tenantId, id);
+    }
+    updateEmployee(u, id, dto) {
+        return this.svc.updateEmployee(u.tenantId, id, dto);
+    }
+    removeEmployee(u, id) {
+        return this.svc.removeEmployee(u.tenantId, id);
+    }
+    findDepts(u) {
+        return this.svc.findDepartments(u.tenantId);
+    }
+    createDept(u, dto) {
+        return this.svc.createDepartment(u.tenantId, u.sub, dto);
+    }
+    updateDept(u, id, dto) {
+        return this.svc.updateDepartment(u.tenantId, id, dto);
+    }
+    removeDept(u, id) {
+        return this.svc.removeDepartment(u.tenantId, id);
+    }
+    findAttendance(u, q) {
+        return this.svc.findAttendance(u.tenantId, q);
+    }
+    getAttSummary(u, month) {
+        return this.svc.getAttendanceSummary(u.tenantId, month);
+    }
+    createAttendance(u, dto) {
+        return this.svc.createAttendance(u.tenantId, u.sub, dto);
+    }
+    clockIn(u, dto) {
+        return this.svc.clockIn(u.tenantId, dto.employeeId, u.sub, dto.location);
+    }
+    clockOut(u, dto) {
+        return this.svc.clockOut(u.tenantId, dto.employeeId, dto.location);
+    }
+    updateAttendance(u, id, dto) {
+        return this.svc.updateAttendance(u.tenantId, id, dto);
+    }
+    findLeaveTypes(u) {
+        return this.svc.findLeaveTypes(u.tenantId);
+    }
+    createLeaveType(u, dto) {
+        return this.svc.createLeaveType(u.tenantId, u.sub, dto);
+    }
+    updateLeaveType(u, id, dto) {
+        return this.svc.updateLeaveType(u.tenantId, id, dto);
+    }
+    findLeaves(u, q) {
+        return this.svc.findLeaves(u.tenantId, q);
+    }
+    createLeave(u, dto) {
+        return this.svc.createLeave(u.tenantId, u.sub, dto);
+    }
+    approveLeave(u, id) {
+        return this.svc.approveLeave(u.tenantId, id, u.sub);
+    }
+    rejectLeave(u, id, dto) {
+        return this.svc.rejectLeave(u.tenantId, id, dto.reason);
+    }
+    findPayrollRuns(u) {
+        return this.svc.findPayrollRuns(u.tenantId);
+    }
+    createPayrollRun(u, dto) {
+        return this.svc.createPayrollRun(u.tenantId, u.sub, dto.payPeriod);
+    }
+    getPayrollItems(u, id) {
+        return this.svc.getPayrollItems(u.tenantId, id);
+    }
+    updatePayrollItem(u, id, dto) {
+        return this.svc.updatePayrollItem(u.tenantId, id, dto);
+    }
+    approvePayrollRun(u, id) {
+        return this.svc.approvePayrollRun(u.tenantId, id, u.sub);
+    }
+    findJobs(u) {
+        return this.svc.findJobs(u.tenantId);
+    }
+    createJob(u, dto) {
+        return this.svc.createJob(u.tenantId, u.sub, dto);
+    }
+    updateJob(u, id, dto) {
+        return this.svc.updateJob(u.tenantId, id, dto);
+    }
+    findApplicants(u, id) {
+        return this.svc.findApplicants(u.tenantId, id);
+    }
+    createApplicant(u, id, dto) {
+        return this.svc.createApplicant(u.tenantId, u.sub, { ...dto, jobId: id });
+    }
+    moveStage(u, id, dto) {
+        return this.svc.moveApplicantStage(u.tenantId, id, dto.stage);
+    }
+    generatePayslips(u, id) {
+        return this.svc.generatePayslips(u.tenantId, id);
+    }
+    getPayslips(u, id) {
+        return this.svc.getPayslips(u.tenantId, id);
+    }
+    getAnalytics(u) {
+        return this.svc.getHRAnalytics(u.tenantId);
+    }
 };
 exports.HrController = HrController;
 __decorate([
@@ -328,6 +403,29 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", void 0)
 ], HrController.prototype, "moveStage", null);
+__decorate([
+    (0, common_1.Post)('payroll/runs/:id/payslips'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], HrController.prototype, "generatePayslips", null);
+__decorate([
+    (0, common_1.Get)('payroll/employees/:id/payslips'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], HrController.prototype, "getPayslips", null);
+__decorate([
+    (0, common_1.Get)('analytics'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], HrController.prototype, "getAnalytics", null);
 exports.HrController = HrController = __decorate([
     (0, swagger_1.ApiTags)('HR'),
     (0, swagger_1.ApiBearerAuth)(),

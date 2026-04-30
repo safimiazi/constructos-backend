@@ -8,6 +8,8 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { User } from '../users/entities/user.entity';
 import { Tenant } from '../tenants/entities/tenant.entity';
+import { Subscription } from '../billing/entities/subscription.entity';
+import { Plan } from '../billing/entities/plan.entity';
 
 @Module({
   imports: [
@@ -19,7 +21,7 @@ import { Tenant } from '../tenants/entities/tenant.entity';
         signOptions: { expiresIn: config.get('JWT_EXPIRES_IN', '15m') },
       }),
     }),
-    TypeOrmModule.forFeature([User, Tenant]),
+    TypeOrmModule.forFeature([User, Tenant, Subscription, Plan]),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

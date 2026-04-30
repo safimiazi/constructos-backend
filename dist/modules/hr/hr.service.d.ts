@@ -6,6 +6,7 @@ import { PayrollRun, PayrollItem } from './entities/payroll.entity';
 import { Department } from './entities/department.entity';
 import { JobPosting, Applicant, ApplicantStage } from './entities/job-posting.entity';
 import { LeaveType } from './entities/leave-type.entity';
+import { Payslip } from './entities/payslip.entity';
 export declare class HrService {
     private empRepo;
     private attRepo;
@@ -16,7 +17,8 @@ export declare class HrService {
     private jobRepo;
     private applicantRepo;
     private leaveTypeRepo;
-    constructor(empRepo: Repository<Employee>, attRepo: Repository<Attendance>, leaveRepo: Repository<Leave>, runRepo: Repository<PayrollRun>, itemRepo: Repository<PayrollItem>, deptRepo: Repository<Department>, jobRepo: Repository<JobPosting>, applicantRepo: Repository<Applicant>, leaveTypeRepo: Repository<LeaveType>);
+    private payslipRepo;
+    constructor(empRepo: Repository<Employee>, attRepo: Repository<Attendance>, leaveRepo: Repository<Leave>, runRepo: Repository<PayrollRun>, itemRepo: Repository<PayrollItem>, deptRepo: Repository<Department>, jobRepo: Repository<JobPosting>, applicantRepo: Repository<Applicant>, leaveTypeRepo: Repository<LeaveType>, payslipRepo: Repository<Payslip>);
     findEmployees(tenantId: string, q: {
         search?: string;
         status?: string;
@@ -80,4 +82,16 @@ export declare class HrService {
     findLeaveTypes(tenantId: string): Promise<LeaveType[]>;
     createLeaveType(tenantId: string, userId: string, dto: Partial<LeaveType>): Promise<LeaveType>;
     updateLeaveType(tenantId: string, id: string, dto: Partial<LeaveType>): Promise<LeaveType | null>;
+    generatePayslips(tenantId: string, runId: string): Promise<Payslip[]>;
+    getPayslips(tenantId: string, employeeId: string): Promise<Payslip[]>;
+    getHRAnalytics(tenantId: string): Promise<{
+        totalEmployees: number;
+        activeEmployees: number;
+        onLeave: number;
+        terminated: number;
+        turnoverRate: number;
+        totalPayrollCost: number;
+        deptBreakdown: any[];
+        totalOvertimeHours: number;
+    }>;
 }

@@ -9,13 +9,36 @@ export declare class SuperadminController {
         activeCount: number;
         trialCount: number;
         suspendedCount: number;
+        cancelledCount: number;
         totalUsers: number;
         recentTenants: import("../tenants/entities/tenant.entity").Tenant[];
+        expiringTrials: import("../tenants/entities/tenant.entity").Tenant[];
     }>;
     getBillingOverview(): Promise<{
         subscriptionsByStatus: any[];
     }>;
     getGrowth(): Promise<any[]>;
+    getTenantStatus(): Promise<{
+        name: string;
+        value: number;
+        color: string;
+    }[]>;
+    getPlanDist(): Promise<{
+        color: string;
+        name: string;
+        tier: import("../../common/interfaces/jwt-payload.interface").PlanTier;
+        count: number;
+    }[]>;
+    getTopTenants(): Promise<{
+        id: string;
+        name: string;
+        slug: string;
+        status: TenantStatus;
+        users: number;
+        planName: any;
+        planTier: any;
+        joinedAt: Date;
+    }[]>;
     findTenants(q: any): Promise<{
         data: import("../tenants/entities/tenant.entity").Tenant[];
         meta: {
@@ -54,9 +77,10 @@ export declare class SuperadminController {
             totalPages: number;
         };
     }>;
+    getActiveAnnouncements(): Promise<import("./entities/announcement.entity").Announcement[]>;
+    getAnnouncementsForTenant(user: any): Promise<import("./entities/announcement.entity").Announcement[]>;
     findAnnouncements(): Promise<import("./entities/announcement.entity").Announcement[]>;
     createAnnouncement(dto: any): Promise<import("./entities/announcement.entity").Announcement>;
     updateAnnouncement(id: string, dto: any): Promise<import("./entities/announcement.entity").Announcement | null>;
     deleteAnnouncement(id: string): Promise<void>;
-    getActiveAnnouncements(): Promise<import("./entities/announcement.entity").Announcement[]>;
 }

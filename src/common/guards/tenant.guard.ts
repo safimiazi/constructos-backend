@@ -38,9 +38,10 @@ export class TenantGuard implements CanActivate {
 
     request.tenant = tenant;
 
-    // Set RLS session variable for PostgreSQL
+    // Set RLS session variable for PostgreSQL (parameterized to prevent injection)
     await this.dataSource.query(
-      `SET LOCAL app.tenant_id = '${tenantId}'`,
+      `SET LOCAL "app.tenant_id" = $1`,
+      [tenantId],
     );
 
     return true;

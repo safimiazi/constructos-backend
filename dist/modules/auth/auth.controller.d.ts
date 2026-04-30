@@ -30,7 +30,9 @@ export declare class AuthController {
         };
     }>;
     logout(userId: string): Promise<void>;
-    refresh(userId: string): Promise<{
+    refresh(body: {
+        refreshToken?: string;
+    }): Promise<{
         accessToken: string;
         refreshToken: string;
         user: {
@@ -45,10 +47,6 @@ export declare class AuthController {
     }>;
     forgotPassword(dto: ForgotPasswordDto): Promise<{
         message: string;
-        resetToken?: undefined;
-    } | {
-        message: string;
-        resetToken: string;
     }>;
     resetPassword(dto: ResetPasswordDto): Promise<{
         message: string;

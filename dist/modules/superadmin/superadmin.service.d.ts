@@ -49,13 +49,36 @@ export declare class SuperadminService {
         activeCount: number;
         trialCount: number;
         suspendedCount: number;
+        cancelledCount: number;
         totalUsers: number;
         recentTenants: Tenant[];
+        expiringTrials: Tenant[];
     }>;
     getBillingOverview(): Promise<{
         subscriptionsByStatus: any[];
     }>;
     getGrowthAnalytics(): Promise<any[]>;
+    getTenantStatusBreakdown(): Promise<{
+        name: string;
+        value: number;
+        color: string;
+    }[]>;
+    getPlanDistribution(): Promise<{
+        color: string;
+        name: string;
+        tier: import("../../common/interfaces/jwt-payload.interface").PlanTier;
+        count: number;
+    }[]>;
+    getTopTenants(): Promise<{
+        id: string;
+        name: string;
+        slug: string;
+        status: TenantStatus;
+        users: number;
+        planName: any;
+        planTier: any;
+        joinedAt: Date;
+    }[]>;
     findPlans(): Promise<Plan[]>;
     createPlan(dto: Partial<Plan>): Promise<Plan>;
     updatePlan(id: string, dto: Partial<Plan>): Promise<Plan | null>;
@@ -77,4 +100,5 @@ export declare class SuperadminService {
     updateAnnouncement(id: string, dto: Partial<Announcement>): Promise<Announcement | null>;
     deleteAnnouncement(id: string): Promise<void>;
     getActiveAnnouncements(): Promise<Announcement[]>;
+    getActiveAnnouncementsForTenant(tenantId: string): Promise<Announcement[]>;
 }

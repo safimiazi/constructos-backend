@@ -21,6 +21,7 @@ const purchase_order_entity_1 = require("./entities/purchase-order.entity");
 const material_request_entity_1 = require("./entities/material-request.entity");
 const inventory_entity_1 = require("./entities/inventory.entity");
 const rfq_entity_1 = require("./entities/rfq.entity");
+const three_way_match_entity_1 = require("./entities/three-way-match.entity");
 let ProcurementService = class ProcurementService {
     vendorRepo;
     poRepo;
@@ -28,13 +29,15 @@ let ProcurementService = class ProcurementService {
     invRepo;
     rfqRepo;
     grnRepo;
-    constructor(vendorRepo, poRepo, mrRepo, invRepo, rfqRepo, grnRepo) {
+    matchRepo;
+    constructor(vendorRepo, poRepo, mrRepo, invRepo, rfqRepo, grnRepo, matchRepo) {
         this.vendorRepo = vendorRepo;
         this.poRepo = poRepo;
         this.mrRepo = mrRepo;
         this.invRepo = invRepo;
         this.rfqRepo = rfqRepo;
         this.grnRepo = grnRepo;
+        this.matchRepo = matchRepo;
     }
     findVendors(tenantId, q) {
         const { search, page = 1, limit = 20 } = q;
@@ -118,6 +121,39 @@ let ProcurementService = class ProcurementService {
         await this.invRepo.update({ id, tenantId }, { qtyInHand: Number(item.qtyInHand) - qty, location: toLocation });
         return this.invRepo.findOne({ where: { id, tenantId } });
     }
+    async createThreeWayMatch(tenantId, userId, dto) {
+        const po = await this.poRepo.findOne({ where: { id: dto.poId, tenantId } });
+        const grn = await this.grnRepo.findOne({ where: { id: dto.grnId, tenantId } });
+        if (!po || !grn)
+            throw new common_1.NotFoundException('PO or GRN not found');
+        const poAmount = Number(po.totalCost);
+        const poItems = po.items ?? [];
+        const grnAmount = grn.items.reduce((s, gi) => {
+            const poItem = poItems.find((pi) => pi.description === gi.description || pi.itemCode === gi.itemCode);
+            const unitCost = poItem ? Number(poItem.unitCost) : (poAmount / Math.max(poItems.length, 1));
+            return s + (Number(gi.qtyAccepted) * unitCost);
+        }, 0);
+        const invoiceAmount = dto.invoiceId ? poAmount : 0;
+        const tolerance = 0.05;
+        const poGrnDiff = Math.abs(poAmount - grnAmount) / Math.max(poAmount, 1);
+        const status = poGrnDiff <= tolerance ? three_way_match_entity_1.MatchStatus.MATCHED : three_way_match_entity_1.MatchStatus.DISCREPANCY;
+        const discrepancyNotes = status === three_way_match_entity_1.MatchStatus.DISCREPANCY
+            ? `PO: ৳${poAmount.toFixed(2)}, GRN: ৳${grnAmount.toFixed(2)}, Diff: ${(poGrnDiff * 100).toFixed(1)}%`
+            : null;
+        return this.matchRepo.save(this.matchRepo.create({ ...dto, tenantId, poAmount, grnAmount, invoiceAmount, status, discrepancyNotes, createdBy: userId }));
+    }
+    findMatches(tenantId) { return this.matchRepo.find({ where: { tenantId }, order: { createdAt: 'DESC' } }); }
+    getSpendAnalytics(tenantId) {
+        return this.poRepo.createQueryBuilder('p')
+            .leftJoin('vendors', 'v', 'v.id = p.vendor_id')
+            .select('p.vendor_id', 'vendorId')
+            .addSelect('COALESCE(v.name, p.vendor_id)', 'vendorName')
+            .addSelect('SUM(p.total_cost)', 'totalSpend')
+            .addSelect('COUNT(*)', 'poCount')
+            .where('p.tenant_id = :tenantId AND p.deleted_at IS NULL', { tenantId })
+            .groupBy('p.vendor_id').addGroupBy('v.name')
+            .orderBy('SUM(p.total_cost)', 'DESC').limit(10).getRawMany();
+    }
 };
 exports.ProcurementService = ProcurementService;
 exports.ProcurementService = ProcurementService = __decorate([
@@ -128,7 +164,9 @@ exports.ProcurementService = ProcurementService = __decorate([
     __param(3, (0, typeorm_1.InjectRepository)(inventory_entity_1.Inventory)),
     __param(4, (0, typeorm_1.InjectRepository)(rfq_entity_1.RFQ)),
     __param(5, (0, typeorm_1.InjectRepository)(rfq_entity_1.GRN)),
+    __param(6, (0, typeorm_1.InjectRepository)(three_way_match_entity_1.ThreeWayMatch)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,

@@ -54,16 +54,22 @@ const config_1 = require("@nestjs/config");
 const bcrypt = __importStar(require("bcryptjs"));
 const user_entity_1 = require("../users/entities/user.entity");
 const tenant_entity_1 = require("../tenants/entities/tenant.entity");
+const subscription_entity_1 = require("../billing/entities/subscription.entity");
+const plan_entity_1 = require("../billing/entities/plan.entity");
 const jwt_payload_interface_1 = require("../../common/interfaces/jwt-payload.interface");
 let AuthService = class AuthService {
     userRepo;
     tenantRepo;
+    subRepo;
+    planRepo;
     jwtService;
     configService;
     dataSource;
-    constructor(userRepo, tenantRepo, jwtService, configService, dataSource) {
+    constructor(userRepo, tenantRepo, subRepo, planRepo, jwtService, configService, dataSource) {
         this.userRepo = userRepo;
         this.tenantRepo = tenantRepo;
+        this.subRepo = subRepo;
+        this.planRepo = planRepo;
         this.jwtService = jwtService;
         this.configService = configService;
         this.dataSource = dataSource;
@@ -134,26 +140,71 @@ let AuthService = class AuthService {
         }
         return this.generateTokens(user);
     }
+    async refreshFromToken(refreshToken) {
+        let payload;
+        try {
+            payload = this.jwtService.verify(refreshToken, {
+                secret: this.configService.get('JWT_REFRESH_SECRET'),
+            });
+        }
+        catch {
+            throw new common_1.UnauthorizedException('Invalid or expired refresh token');
+        }
+        const user = await this.userRepo.findOne({ where: { id: payload.sub } });
+        if (!user)
+            throw new common_1.UnauthorizedException('User not found');
+        if (user.refreshTokenHash) {
+            const valid = await bcrypt.compare(refreshToken, user.refreshTokenHash);
+            if (!valid)
+                throw new common_1.UnauthorizedException('Refresh token has been revoked');
+        }
+        return this.generateTokens(user);
+    }
     async forgotPassword(email) {
         const user = await this.userRepo.findOne({ where: { email } });
         if (!user)
-            return { message: 'If email exists, reset link sent' };
-        const resetToken = Buffer.from(`${user.id}:${Date.now()}`).toString('base64');
-        return { message: 'Reset link sent', resetToken };
+            return { message: 'If that email exists, a reset link has been sent.' };
+        const resetToken = this.jwtService.sign({ sub: user.id, purpose: 'password_reset' }, { secret: this.configService.get('JWT_SECRET'), expiresIn: '1h' });
+        if (this.configService.get('NODE_ENV') !== 'production') {
+            console.log(`[DEV] Password reset token for ${email}: ${resetToken}`);
+        }
+        return { message: 'If that email exists, a reset link has been sent.' };
     }
     async resetPassword(token, newPassword) {
-        const decoded = Buffer.from(token, 'base64').toString('utf-8');
-        const [userId] = decoded.split(':');
+        let payload;
+        try {
+            payload = this.jwtService.verify(token, { secret: this.configService.get('JWT_SECRET') });
+        }
+        catch {
+            throw new common_1.BadRequestException('Invalid or expired reset token');
+        }
+        if (payload.purpose !== 'password_reset') {
+            throw new common_1.BadRequestException('Invalid token purpose');
+        }
+        if (newPassword.length < 8) {
+            throw new common_1.BadRequestException('Password must be at least 8 characters');
+        }
         const hash = await bcrypt.hash(newPassword, 12);
-        await this.userRepo.update(userId, { passwordHash: hash, refreshTokenHash: null });
+        await this.userRepo.update(payload.sub, { passwordHash: hash, refreshTokenHash: null });
         return { message: 'Password reset successful' };
     }
     async generateTokens(user, tenant) {
+        let planTier = null;
+        if (user.tenantId) {
+            const sub = await this.subRepo.createQueryBuilder('s')
+                .innerJoin('plans', 'p', 'p.id = s.plan_id')
+                .select('p.tier', 'tier')
+                .where('s.tenant_id = :tid', { tid: user.tenantId })
+                .orderBy('s.created_at', 'DESC')
+                .limit(1)
+                .getRawOne();
+            planTier = sub?.tier ?? null;
+        }
         const payload = {
             sub: user.id,
             tenantId: user.tenantId,
             role: user.role,
-            planTier: null,
+            planTier,
             isSuperAdmin: user.isSuperAdmin,
             email: user.email,
         };
@@ -174,7 +225,11 @@ exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __param(1, (0, typeorm_1.InjectRepository)(tenant_entity_1.Tenant)),
+    __param(2, (0, typeorm_1.InjectRepository)(subscription_entity_1.Subscription)),
+    __param(3, (0, typeorm_1.InjectRepository)(plan_entity_1.Plan)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository,
         jwt_1.JwtService,
         config_1.ConfigService,

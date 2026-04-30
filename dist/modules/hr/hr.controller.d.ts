@@ -57,4 +57,16 @@ export declare class HrController {
     moveStage(u: JwtPayload, id: string, dto: {
         stage: ApplicantStage;
     }): Promise<import("./entities/job-posting.entity").Applicant | null>;
+    generatePayslips(u: JwtPayload, id: string): Promise<import("./entities/payslip.entity").Payslip[]>;
+    getPayslips(u: JwtPayload, id: string): Promise<import("./entities/payslip.entity").Payslip[]>;
+    getAnalytics(u: JwtPayload): Promise<{
+        totalEmployees: number;
+        activeEmployees: number;
+        onLeave: number;
+        terminated: number;
+        turnoverRate: number;
+        totalPayrollCost: number;
+        deptBreakdown: any[];
+        totalOvertimeHours: number;
+    }>;
 }

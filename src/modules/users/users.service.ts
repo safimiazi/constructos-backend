@@ -1,13 +1,15 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User, UserStatus } from './entities/user.entity';
+import { CustomRole } from './entities/role-permission.entity';
 import { UserRole } from '../../common/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectRepository(User) private repo: Repository<User>) {}
+  constructor(@InjectRepository(User) private repo: Repository<User>,
+              @InjectRepository(CustomRole) private roleRepo: Repository<CustomRole>) {}
 
   findAll(tenantId: string, q: { search?: string; role?: string; page?: number; limit?: number }) {
     const { search, role, page = 1, limit = 20 } = q;
@@ -66,5 +68,19 @@ export class UsersService {
   private sanitize(u: User) {
     const { passwordHash, refreshTokenHash, ...rest } = u as any;
     return rest;
+  }
+
+  // Custom Roles
+  findRoles(tenantId: string) { return this.roleRepo.find({ where: { tenantId, isActive: true }, order: { name: 'ASC' } }); }
+  createRole(tenantId: string, userId: string, dto: Partial<CustomRole>) { return this.roleRepo.save(this.roleRepo.create({ ...dto, tenantId, createdBy: userId })); }
+  async updateRole(tenantId: string, id: string, dto: Partial<CustomRole>) { await this.roleRepo.update({ id, tenantId }, dto); return this.roleRepo.findOne({ where: { id, tenantId } }); }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const u = await this.repo.findOne({ where: { id: userId } });
+    if (!u) throw new NotFoundException('User not found');
+    const valid = await u.validatePassword(currentPassword);
+    if (!valid) throw new UnauthorizedException('Current password is incorrect');
+    u.passwordHash = await bcrypt.hash(newPassword, 12);
+    await this.repo.save(u);
   }
 }

@@ -38,4 +38,11 @@ export class ProcurementController {
   @Post('inventory') createItem(@CurrentUser() u: JwtPayload, @Body() dto: any) { return this.svc.createInventoryItem(u.tenantId!, u.sub, dto); }
   @Patch('inventory/:id') updateItem(@CurrentUser() u: JwtPayload, @Param('id') id: string, @Body() dto: any) { return this.svc.updateInventoryItem(u.tenantId!, id, dto); }
   @Post('inventory/transfer') transferStock(@CurrentUser() u: JwtPayload, @Body() dto: { id: string; qty: number; toLocation: string }) { return this.svc.transferStock(u.tenantId!, dto.id, dto.qty, dto.toLocation); }
+
+  // 3-Way Match
+  @Get('three-way-match') findMatches(@CurrentUser() u: JwtPayload) { return this.svc.findMatches(u.tenantId!); }
+  @Post('three-way-match') createMatch(@CurrentUser() u: JwtPayload, @Body() dto: any) { return this.svc.createThreeWayMatch(u.tenantId!, u.sub, dto); }
+
+  // Spend Analytics
+  @Get('analytics/spend') getSpend(@CurrentUser() u: JwtPayload) { return this.svc.getSpendAnalytics(u.tenantId!); }
 }

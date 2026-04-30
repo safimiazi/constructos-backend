@@ -9,6 +9,7 @@ import { Issue } from './entities/issue.entity';
 import { TaskDependency } from './entities/task-dependency.entity';
 import { Subcontract } from './entities/subcontract.entity';
 import { Risk } from './entities/risk.entity';
+import { Defect } from './entities/defect.entity';
 
 @Injectable()
 export class ProjectsService {
@@ -21,6 +22,7 @@ export class ProjectsService {
     @InjectRepository(TaskDependency) private depRepo: Repository<TaskDependency>,
     @InjectRepository(Subcontract) private subRepo: Repository<Subcontract>,
     @InjectRepository(Risk) private riskRepo: Repository<Risk>,
+    @InjectRepository(Defect) private defectRepo: Repository<Defect>,
   ) {}
 
   // ── Projects ───────────────────────────────────────────────────────────────
@@ -76,7 +78,19 @@ export class ProjectsService {
   }
 
   async createTask(tenantId: string, projectId: string, userId: string, dto: Partial<Task>) {
-    const t = this.taskRepo.create({ ...dto, tenantId, projectId, createdBy: userId });
+    // Auto-generate WBS code if not provided
+    let wbsCode = (dto as any).wbsCode;
+    if (!wbsCode) {
+      if (dto.parentTaskId) {
+        const parent = await this.taskRepo.findOne({ where: { id: dto.parentTaskId, tenantId } });
+        const siblingCount = await this.taskRepo.count({ where: { tenantId, projectId, parentTaskId: dto.parentTaskId } });
+        wbsCode = parent?.wbsCode ? `${parent.wbsCode}.${siblingCount + 1}` : `${siblingCount + 1}`;
+      } else {
+        const rootCount = await this.taskRepo.count({ where: { tenantId, projectId, parentTaskId: null as any } });
+        wbsCode = String(rootCount + 1);
+      }
+    }
+    const t = this.taskRepo.create({ ...dto, tenantId, projectId, wbsCode, createdBy: userId });
     const saved = await this.taskRepo.save(t);
     await this.recalcProjectCompletion(tenantId, projectId);
     return saved;
@@ -97,9 +111,12 @@ export class ProjectsService {
 
   private async recalcProjectCompletion(tenantId: string, projectId: string) {
     const tasks = await this.taskRepo.find({ where: { tenantId, projectId } });
-    if (!tasks.length) return;
+    if (!tasks.length) {
+      // No tasks — keep existing completion percentage unchanged
+      return;
+    }
     const avg = tasks.reduce((s, t) => {
-      const pct = t.status === 'done' ? 100 : t.status === 'blocked' ? 0 : Number(t.progressPct);
+      const pct = t.status === 'done' ? 100 : t.status === 'blocked' ? Number(t.progressPct) : Number(t.progressPct);
       return s + pct;
     }, 0) / tasks.length;
     await this.projectRepo.update({ id: projectId, tenantId }, { completionPercentage: Math.round(avg) });
@@ -138,16 +155,24 @@ export class ProjectsService {
   async createLog(tenantId: string, projectId: string, userId: string, dto: Partial<DailyLog>) {
     const l = this.logRepo.create({ ...dto, tenantId, projectId, createdBy: userId });
     const saved = await this.logRepo.save(l);
-    if (dto.progressPct !== undefined) {
-      await this.projectRepo.update({ id: projectId, tenantId }, { completionPercentage: Number(dto.progressPct) });
-    }
+    // Only update project completion from tasks (not from daily log progress directly)
+    // Daily log progress is informational only; task-based completion is authoritative
+    await this.recalcProjectCompletion(tenantId, projectId);
     return saved;
   }
 
   // ── Milestones ─────────────────────────────────────────────────────────────
 
-  getMilestones(tenantId: string, projectId: string) {
-    return this.milestoneRepo.find({ where: { tenantId, projectId }, order: { dueDate: 'ASC' } });
+  async getMilestones(tenantId: string, projectId: string) {
+    const milestones = await this.milestoneRepo.find({ where: { tenantId, projectId }, order: { dueDate: 'ASC' } });
+    const today = new Date();
+    // Auto-mark overdue milestones
+    const toUpdate = milestones.filter(m => m.status === 'pending' as any && m.dueDate && new Date(m.dueDate) < today);
+    if (toUpdate.length > 0) {
+      await Promise.all(toUpdate.map(m => this.milestoneRepo.update({ id: m.id }, { status: 'overdue' as any })));
+      toUpdate.forEach(m => { (m as any).status = 'overdue'; });
+    }
+    return milestones;
   }
 
   createMilestone(tenantId: string, projectId: string, userId: string, dto: Partial<Milestone>) {
@@ -224,10 +249,82 @@ export class ProjectsService {
     const overdueCount = await this.projectRepo.createQueryBuilder('p')
       .where('p.tenant_id = :tenantId AND p.end_date < NOW() AND p.status NOT IN (:...statuses) AND p.deleted_at IS NULL', { tenantId, statuses: ['completed', 'cancelled'] })
       .getCount();
+    // Overdue milestones count
+    const overdueMilestones = await this.milestoneRepo.createQueryBuilder('m')
+      .where('m.tenant_id = :tenantId AND m.due_date < NOW() AND m.status = :s', { tenantId, s: 'pending' })
+      .getCount();
     const budgetStats = await this.projectRepo.createQueryBuilder('p')
       .select('SUM(p.budget_amount)', 'totalBudget').addSelect('AVG(p.completion_percentage)', 'avgCompletion')
       .where('p.tenant_id = :tenantId AND p.deleted_at IS NULL', { tenantId }).getRawOne();
     const recentProjects = await this.projectRepo.find({ where: { tenantId }, order: { createdAt: 'DESC' }, take: 5 });
-    return { total, active, completed, onHold, overdueCount, avgCompletion: Math.round(Number(budgetStats?.avgCompletion ?? 0)), totalBudget: budgetStats?.totalBudget ?? 0, recentProjects };
+    return { total, active, completed, onHold, overdueCount, overdueMilestones, avgCompletion: Math.round(Number(budgetStats?.avgCompletion ?? 0)), totalBudget: budgetStats?.totalBudget ?? 0, recentProjects };
+  }
+
+  // ── Defects / Punch List ───────────────────────────────────────────────────
+
+  getDefects(tenantId: string, projectId: string, q: { status?: string }) {
+    const qb = this.defectRepo.createQueryBuilder('d')
+      .where('d.tenant_id = :tenantId AND d.project_id = :projectId AND d.deleted_at IS NULL', { tenantId, projectId })
+      .orderBy('d.created_at', 'DESC');
+    if (q.status) qb.andWhere('d.status = :status', { status: q.status });
+    return qb.getMany();
+  }
+
+  createDefect(tenantId: string, projectId: string, userId: string, dto: Partial<Defect>) {
+    return this.defectRepo.save(this.defectRepo.create({ ...dto, tenantId, projectId, createdBy: userId }));
+  }
+
+  async updateDefect(tenantId: string, id: string, dto: Partial<Defect>) {
+    if ((dto as any).status === 'resolved' || (dto as any).status === 'closed') {
+      (dto as any).resolvedAt = new Date();
+    }
+    await this.defectRepo.update({ id, tenantId }, dto);
+    return this.defectRepo.findOne({ where: { id, tenantId } });
+  }
+
+  async removeDefect(tenantId: string, id: string) {
+    await this.defectRepo.softDelete({ id, tenantId });
+  }
+
+  // ── Per-project cost report ────────────────────────────────────────────────
+
+  async getProjectCostReport(tenantId: string, projectId: string) {
+    const [project, budgetSummary, vendorInvoices, expenses] = await Promise.all([
+      this.projectRepo.findOne({ where: { id: projectId, tenantId } }),
+      // Budget vs actual from budget table
+      this.projectRepo.manager.query(
+        `SELECT COALESCE(SUM(budget_amount),0) as budget, COALESCE(SUM(actual_amount),0) as actual FROM budgets WHERE tenant_id=$1 AND project_id=$2 AND deleted_at IS NULL`,
+        [tenantId, projectId]
+      ),
+      // Vendor invoices for this project
+      this.projectRepo.manager.query(
+        `SELECT COALESCE(SUM(total_amount),0) as committed, COALESCE(SUM(paid_amount),0) as paid FROM invoices WHERE tenant_id=$1 AND project_id=$2 AND type='vendor' AND status NOT IN ('cancelled','draft') AND deleted_at IS NULL`,
+        [tenantId, projectId]
+      ),
+      // Expense claims for this project
+      this.projectRepo.manager.query(
+        `SELECT COALESCE(SUM(amount),0) as total FROM expense_claims WHERE tenant_id=$1 AND project_id=$2 AND status='approved' AND deleted_at IS NULL`,
+        [tenantId, projectId]
+      ),
+    ]);
+    if (!project) throw new NotFoundException('Project not found');
+    const approvedBudget = Number(project.budgetAmount);
+    const budgetActual = Number(budgetSummary[0]?.actual ?? 0);
+    const vendorCommitted = Number(vendorInvoices[0]?.committed ?? 0);
+    const vendorPaid = Number(vendorInvoices[0]?.paid ?? 0);
+    const expenseTotal = Number(expenses[0]?.total ?? 0);
+    const totalCost = vendorPaid + expenseTotal;
+    return {
+      projectId,
+      projectName: project.name,
+      approvedBudget,
+      budgetActual,
+      vendorCommitted,
+      vendorPaid,
+      expenseTotal,
+      totalCost,
+      variance: approvedBudget - totalCost,
+      completionPct: Number(project.completionPercentage),
+    };
   }
 }

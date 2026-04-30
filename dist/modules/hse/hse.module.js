@@ -10,6 +10,7 @@ exports.HseModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const incident_entity_1 = require("./entities/incident.entity");
+const ptw_entity_1 = require("./entities/ptw.entity");
 const hse_service_1 = require("./hse.service");
 const hse_controller_1 = require("./hse.controller");
 let HseModule = class HseModule {
@@ -17,7 +18,7 @@ let HseModule = class HseModule {
 exports.HseModule = HseModule;
 exports.HseModule = HseModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([incident_entity_1.Incident])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([incident_entity_1.Incident, ptw_entity_1.PermitToWork, ptw_entity_1.SafetyChecklist])],
         controllers: [hse_controller_1.HseController],
         providers: [hse_service_1.HseService],
         exports: [hse_service_1.HseService],

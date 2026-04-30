@@ -28,6 +28,18 @@ let TenantsController = class TenantsController {
     updateCompany(u, dto) {
         return this.svc.updateCompany(u.tenantId, dto);
     }
+    getBranches(u) {
+        return this.svc.findBranches(u.tenantId);
+    }
+    createBranch(u, dto) {
+        return this.svc.createBranch(u.tenantId, u.sub, dto);
+    }
+    updateBranch(u, id, dto) {
+        return this.svc.updateBranch(u.tenantId, id, dto);
+    }
+    removeBranch(u, id) {
+        return this.svc.removeBranch(u.tenantId, id);
+    }
 };
 exports.TenantsController = TenantsController;
 __decorate([
@@ -45,6 +57,39 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], TenantsController.prototype, "updateCompany", null);
+__decorate([
+    (0, common_1.Get)('branches'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], TenantsController.prototype, "getBranches", null);
+__decorate([
+    (0, common_1.Post)('branches'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], TenantsController.prototype, "createBranch", null);
+__decorate([
+    (0, common_1.Patch)('branches/:id'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], TenantsController.prototype, "updateBranch", null);
+__decorate([
+    (0, common_1.Delete)('branches/:id'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], TenantsController.prototype, "removeBranch", null);
 exports.TenantsController = TenantsController = __decorate([
     (0, swagger_1.ApiTags)('Company'),
     (0, swagger_1.ApiBearerAuth)(),

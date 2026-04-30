@@ -1,5 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ProjectsService } from './projects.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
@@ -55,4 +54,13 @@ export class ProjectsController {
   @Get(':id/risks') getRisks(@CurrentUser() u: JwtPayload, @Param('id') id: string) { return this.svc.getRisks(u.tenantId!, id); }
   @Post(':id/risks') createRisk(@CurrentUser() u: JwtPayload, @Param('id') id: string, @Body() dto: any) { return this.svc.createRisk(u.tenantId!, u.sub, { ...dto, projectId: id }); }
   @Patch(':id/risks/:rid') updateRisk(@CurrentUser() u: JwtPayload, @Param('rid') rid: string, @Body() dto: any) { return this.svc.updateRisk(u.tenantId!, rid, dto); }
+
+  // Defects / Punch List
+  @Get(':id/defects') getDefects(@CurrentUser() u: JwtPayload, @Param('id') id: string, @Query() q: any) { return this.svc.getDefects(u.tenantId!, id, q); }
+  @Post(':id/defects') createDefect(@CurrentUser() u: JwtPayload, @Param('id') id: string, @Body() dto: any) { return this.svc.createDefect(u.tenantId!, id, u.sub, dto); }
+  @Patch(':id/defects/:did') updateDefect(@CurrentUser() u: JwtPayload, @Param('did') did: string, @Body() dto: any) { return this.svc.updateDefect(u.tenantId!, did, dto); }
+  @Delete(':id/defects/:did') @HttpCode(HttpStatus.NO_CONTENT) removeDefect(@CurrentUser() u: JwtPayload, @Param('did') did: string) { return this.svc.removeDefect(u.tenantId!, did); }
+
+  // Per-project cost report
+  @Get(':id/cost-report') getCostReport(@CurrentUser() u: JwtPayload, @Param('id') id: string) { return this.svc.getProjectCostReport(u.tenantId!, id); }
 }

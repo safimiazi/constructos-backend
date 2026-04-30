@@ -8,12 +8,25 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
 
+  // Fail fast if running in production with default secrets
+  if (config.get('NODE_ENV') === 'production') {
+    const jwtSecret = config.get('JWT_SECRET', '');
+    if (!jwtSecret || jwtSecret.includes('fallback') || jwtSecret.includes('CHANGE_THIS')) {
+      console.error('FATAL: JWT_SECRET is not set or is using a default value. Set a strong secret before running in production.');
+      process.exit(1);
+    }
+  }
+
   // Global prefix
   app.setGlobalPrefix(config.get('API_PREFIX', 'v1'));
 
   // CORS
+  const allowedOrigins = config.get('CORS_ORIGIN', 'http://localhost:3000').split(',');
   app.enableCors({
-    origin: config.get('CORS_ORIGIN', 'http://localhost:3000'),
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) callback(null, true);
+      else callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
   });
 
@@ -21,7 +34,7 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: true,
+      forbidNonWhitelisted: false,
       transform: true,
     }),
   );

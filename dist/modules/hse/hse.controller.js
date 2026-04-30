@@ -22,14 +22,29 @@ let HseController = class HseController {
     constructor(svc) {
         this.svc = svc;
     }
+    getDashboard(u) { return this.svc.getHSEDashboard(u.tenantId); }
     findAll(u, q) { return this.svc.findAll(u.tenantId, q); }
     getStats(u) { return this.svc.getStats(u.tenantId); }
     create(u, dto) { return this.svc.create(u.tenantId, u.sub, dto); }
     findOne(u, id) { return this.svc.findOne(u.tenantId, id); }
     update(u, id, dto) { return this.svc.update(u.tenantId, id, dto); }
     close(u, id) { return this.svc.close(u.tenantId, id); }
+    findPTWs(u, q) { return this.svc.findPTWs(u.tenantId, q); }
+    createPTW(u, dto) { return this.svc.createPTW(u.tenantId, u.sub, dto); }
+    updatePTW(u, id, dto) { return this.svc.updatePTW(u.tenantId, id, dto); }
+    closePTW(u, id) { return this.svc.closePTW(u.tenantId, id); }
+    findChecklists(u, pid) { return this.svc.findChecklists(u.tenantId, pid); }
+    createChecklist(u, dto) { return this.svc.createChecklist(u.tenantId, u.sub, dto); }
+    submitChecklist(u, id, dto) { return this.svc.submitChecklist(u.tenantId, id, dto.responses); }
 };
 exports.HseController = HseController;
+__decorate([
+    (0, common_1.Get)('dashboard'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], HseController.prototype, "getDashboard", null);
 __decorate([
     (0, common_1.Get)('incidents'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
@@ -79,6 +94,64 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], HseController.prototype, "close", null);
+__decorate([
+    (0, common_1.Get)('ptw'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], HseController.prototype, "findPTWs", null);
+__decorate([
+    (0, common_1.Post)('ptw'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], HseController.prototype, "createPTW", null);
+__decorate([
+    (0, common_1.Patch)('ptw/:id'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], HseController.prototype, "updatePTW", null);
+__decorate([
+    (0, common_1.Patch)('ptw/:id/close'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], HseController.prototype, "closePTW", null);
+__decorate([
+    (0, common_1.Get)('checklists'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Query)('projectId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], HseController.prototype, "findChecklists", null);
+__decorate([
+    (0, common_1.Post)('checklists'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], HseController.prototype, "createChecklist", null);
+__decorate([
+    (0, common_1.Patch)('checklists/:id/submit'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], HseController.prototype, "submitChecklist", null);
 exports.HseController = HseController = __decorate([
     (0, swagger_1.ApiTags)('HSE'),
     (0, swagger_1.ApiBearerAuth)(),

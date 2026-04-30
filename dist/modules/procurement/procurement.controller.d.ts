@@ -56,4 +56,7 @@ export declare class ProcurementController {
         qty: number;
         toLocation: string;
     }): Promise<import("./entities/inventory.entity").Inventory | null>;
+    findMatches(u: JwtPayload): Promise<import("./entities/three-way-match.entity").ThreeWayMatch[]>;
+    createMatch(u: JwtPayload, dto: any): Promise<import("./entities/three-way-match.entity").ThreeWayMatch>;
+    getSpend(u: JwtPayload): Promise<any[]>;
 }

@@ -1,9 +1,11 @@
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { CustomRole } from './entities/role-permission.entity';
 import { UserRole } from '../../common/interfaces/jwt-payload.interface';
 export declare class UsersService {
     private repo;
-    constructor(repo: Repository<User>);
+    private roleRepo;
+    constructor(repo: Repository<User>, roleRepo: Repository<CustomRole>);
     findAll(tenantId: string, q: {
         search?: string;
         role?: string;
@@ -30,4 +32,8 @@ export declare class UsersService {
     remove(tenantId: string, id: string): Promise<void>;
     getProfile(userId: string): Promise<any>;
     private sanitize;
+    findRoles(tenantId: string): Promise<CustomRole[]>;
+    createRole(tenantId: string, userId: string, dto: Partial<CustomRole>): Promise<CustomRole>;
+    updateRole(tenantId: string, id: string, dto: Partial<CustomRole>): Promise<CustomRole | null>;
+    changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void>;
 }

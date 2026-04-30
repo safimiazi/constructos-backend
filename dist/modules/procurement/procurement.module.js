@@ -14,6 +14,7 @@ const purchase_order_entity_1 = require("./entities/purchase-order.entity");
 const material_request_entity_1 = require("./entities/material-request.entity");
 const inventory_entity_1 = require("./entities/inventory.entity");
 const rfq_entity_1 = require("./entities/rfq.entity");
+const three_way_match_entity_1 = require("./entities/three-way-match.entity");
 const procurement_service_1 = require("./procurement.service");
 const procurement_controller_1 = require("./procurement.controller");
 let ProcurementModule = class ProcurementModule {
@@ -21,7 +22,7 @@ let ProcurementModule = class ProcurementModule {
 exports.ProcurementModule = ProcurementModule;
 exports.ProcurementModule = ProcurementModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([vendor_entity_1.Vendor, purchase_order_entity_1.PurchaseOrder, material_request_entity_1.MaterialRequest, inventory_entity_1.Inventory, rfq_entity_1.RFQ, rfq_entity_1.GRN])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([vendor_entity_1.Vendor, purchase_order_entity_1.PurchaseOrder, material_request_entity_1.MaterialRequest, inventory_entity_1.Inventory, rfq_entity_1.RFQ, rfq_entity_1.GRN, three_way_match_entity_1.ThreeWayMatch])],
         controllers: [procurement_controller_1.ProcurementController],
         providers: [procurement_service_1.ProcurementService],
         exports: [procurement_service_1.ProcurementService],

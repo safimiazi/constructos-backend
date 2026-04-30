@@ -42,7 +42,7 @@ let TenantGuard = class TenantGuard {
             throw new common_1.ForbiddenException('Tenant account is cancelled');
         }
         request.tenant = tenant;
-        await this.dataSource.query(`SET LOCAL app.tenant_id = '${tenantId}'`);
+        await this.dataSource.query(`SET LOCAL "app.tenant_id" = $1`, [tenantId]);
         return true;
     }
 };

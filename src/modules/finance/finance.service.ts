@@ -192,25 +192,62 @@ export class FinanceService {
   // ── Reports ────────────────────────────────────────────────────────────────
 
   async getPLReport(tenantId: string, startDate: string, endDate: string) {
-    const [income, expense] = await Promise.all([
-      this.invoiceRepo.createQueryBuilder('i').select('SUM(i.paid_amount)', 'total')
-        .where('i.tenant_id = :tenantId AND i.type = :t AND i.status = :s AND i.issue_date BETWEEN :sd AND :ed AND i.deleted_at IS NULL', { tenantId, t: 'client', s: 'paid', sd: startDate, ed: endDate }).getRawOne(),
-      this.invoiceRepo.createQueryBuilder('i').select('SUM(i.paid_amount)', 'total')
-        .where('i.tenant_id = :tenantId AND i.type = :t AND i.issue_date BETWEEN :sd AND :ed AND i.deleted_at IS NULL', { tenantId, t: 'vendor', sd: startDate, ed: endDate }).getRawOne(),
+    // Accrual basis: income = all client invoices issued in period (not just paid)
+    // Expense = all vendor invoices issued in period
+    const [income, expense, expenseClaims] = await Promise.all([
+      this.invoiceRepo.createQueryBuilder('i')
+        .select('SUM(i.total_amount)', 'total')
+        .where('i.tenant_id = :tenantId AND i.type = :t AND i.status NOT IN (:...excl) AND i.issue_date BETWEEN :sd AND :ed AND i.deleted_at IS NULL',
+          { tenantId, t: 'client', excl: ['cancelled', 'draft'], sd: startDate, ed: endDate })
+        .getRawOne(),
+      this.invoiceRepo.createQueryBuilder('i')
+        .select('SUM(i.total_amount)', 'total')
+        .where('i.tenant_id = :tenantId AND i.type = :t AND i.status NOT IN (:...excl) AND i.issue_date BETWEEN :sd AND :ed AND i.deleted_at IS NULL',
+          { tenantId, t: 'vendor', excl: ['cancelled', 'draft'], sd: startDate, ed: endDate })
+        .getRawOne(),
+      this.expenseRepo.createQueryBuilder('e')
+        .select('SUM(e.amount)', 'total')
+        .where('e.tenant_id = :tenantId AND e.status = :s AND e.date BETWEEN :sd AND :ed AND e.deleted_at IS NULL',
+          { tenantId, s: 'approved', sd: startDate, ed: endDate })
+        .getRawOne(),
     ]);
     const totalIncome = Number(income?.total ?? 0);
-    const totalExpense = Number(expense?.total ?? 0);
-    return { period: { startDate, endDate }, totalIncome, totalExpense, netProfit: totalIncome - totalExpense, margin: totalIncome > 0 ? Math.round((totalIncome - totalExpense) / totalIncome * 100) : 0 };
+    const totalExpense = Number(expense?.total ?? 0) + Number(expenseClaims?.total ?? 0);
+    return {
+      period: { startDate, endDate },
+      totalIncome,
+      totalExpense,
+      netProfit: totalIncome - totalExpense,
+      margin: totalIncome > 0 ? Math.round((totalIncome - totalExpense) / totalIncome * 100) : 0,
+      breakdown: {
+        clientInvoices: Number(income?.total ?? 0),
+        vendorInvoices: Number(expense?.total ?? 0),
+        expenseClaims: Number(expenseClaims?.total ?? 0),
+      },
+    };
   }
 
   async getCashflowReport(tenantId: string) {
-    const [inflow, outflow] = await Promise.all([
-      this.invoiceRepo.createQueryBuilder('i').select('SUM(i.paid_amount)', 'total').where('i.tenant_id = :tenantId AND i.type = :t AND i.deleted_at IS NULL', { tenantId, t: 'client' }).getRawOne(),
-      this.invoiceRepo.createQueryBuilder('i').select('SUM(i.paid_amount)', 'total').where('i.tenant_id = :tenantId AND i.type = :t AND i.deleted_at IS NULL', { tenantId, t: 'vendor' }).getRawOne(),
+    const [inflow, outflow, expenses] = await Promise.all([
+      this.invoiceRepo.createQueryBuilder('i').select('SUM(i.paid_amount)', 'total')
+        .where('i.tenant_id = :tenantId AND i.type = :t AND i.deleted_at IS NULL', { tenantId, t: 'client' }).getRawOne(),
+      this.invoiceRepo.createQueryBuilder('i').select('SUM(i.paid_amount)', 'total')
+        .where('i.tenant_id = :tenantId AND i.type = :t AND i.deleted_at IS NULL', { tenantId, t: 'vendor' }).getRawOne(),
+      this.expenseRepo.createQueryBuilder('e').select('SUM(e.amount)', 'total')
+        .where('e.tenant_id = :tenantId AND e.status = :s AND e.deleted_at IS NULL', { tenantId, s: 'approved' }).getRawOne(),
     ]);
     const inflowTotal = Number(inflow?.total ?? 0);
-    const outflowTotal = Number(outflow?.total ?? 0);
-    return { inflow: inflowTotal, outflow: outflowTotal, net: inflowTotal - outflowTotal };
+    const outflowTotal = Number(outflow?.total ?? 0) + Number(expenses?.total ?? 0);
+    return {
+      inflow: inflowTotal,
+      outflow: outflowTotal,
+      net: inflowTotal - outflowTotal,
+      breakdown: {
+        clientPayments: inflowTotal,
+        vendorPayments: Number(outflow?.total ?? 0),
+        expenseClaims: Number(expenses?.total ?? 0),
+      },
+    };
   }
 
   async getBalanceSheet(tenantId: string) {

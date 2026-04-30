@@ -4,6 +4,7 @@ import { PurchaseOrder } from './entities/purchase-order.entity';
 import { MaterialRequest } from './entities/material-request.entity';
 import { Inventory } from './entities/inventory.entity';
 import { RFQ, GRN } from './entities/rfq.entity';
+import { ThreeWayMatch } from './entities/three-way-match.entity';
 export declare class ProcurementService {
     private vendorRepo;
     private poRepo;
@@ -11,7 +12,8 @@ export declare class ProcurementService {
     private invRepo;
     private rfqRepo;
     private grnRepo;
-    constructor(vendorRepo: Repository<Vendor>, poRepo: Repository<PurchaseOrder>, mrRepo: Repository<MaterialRequest>, invRepo: Repository<Inventory>, rfqRepo: Repository<RFQ>, grnRepo: Repository<GRN>);
+    private matchRepo;
+    constructor(vendorRepo: Repository<Vendor>, poRepo: Repository<PurchaseOrder>, mrRepo: Repository<MaterialRequest>, invRepo: Repository<Inventory>, rfqRepo: Repository<RFQ>, grnRepo: Repository<GRN>, matchRepo: Repository<ThreeWayMatch>);
     findVendors(tenantId: string, q: {
         search?: string;
         page?: number;
@@ -75,4 +77,11 @@ export declare class ProcurementService {
     createInventoryItem(tenantId: string, userId: string, dto: Partial<Inventory>): Promise<Inventory>;
     updateInventoryItem(tenantId: string, id: string, dto: Partial<Inventory>): Promise<Inventory | null>;
     transferStock(tenantId: string, id: string, qty: number, toLocation: string): Promise<Inventory | null>;
+    createThreeWayMatch(tenantId: string, userId: string, dto: {
+        poId: string;
+        grnId: string;
+        invoiceId: string;
+    }): Promise<ThreeWayMatch>;
+    findMatches(tenantId: string): Promise<ThreeWayMatch[]>;
+    getSpendAnalytics(tenantId: string): Promise<any[]>;
 }

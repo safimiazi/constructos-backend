@@ -23,6 +23,7 @@ const payroll_entity_1 = require("./entities/payroll.entity");
 const department_entity_1 = require("./entities/department.entity");
 const job_posting_entity_1 = require("./entities/job-posting.entity");
 const leave_type_entity_1 = require("./entities/leave-type.entity");
+const payslip_entity_1 = require("./entities/payslip.entity");
 let HrService = class HrService {
     empRepo;
     attRepo;
@@ -33,7 +34,8 @@ let HrService = class HrService {
     jobRepo;
     applicantRepo;
     leaveTypeRepo;
-    constructor(empRepo, attRepo, leaveRepo, runRepo, itemRepo, deptRepo, jobRepo, applicantRepo, leaveTypeRepo) {
+    payslipRepo;
+    constructor(empRepo, attRepo, leaveRepo, runRepo, itemRepo, deptRepo, jobRepo, applicantRepo, leaveTypeRepo, payslipRepo) {
         this.empRepo = empRepo;
         this.attRepo = attRepo;
         this.leaveRepo = leaveRepo;
@@ -43,6 +45,7 @@ let HrService = class HrService {
         this.jobRepo = jobRepo;
         this.applicantRepo = applicantRepo;
         this.leaveTypeRepo = leaveTypeRepo;
+        this.payslipRepo = payslipRepo;
     }
     findEmployees(tenantId, q) {
         const { search, status, page = 1, limit = 20 } = q;
@@ -125,20 +128,20 @@ let HrService = class HrService {
     async approveLeave(tenantId, id, approverId) {
         const leave = await this.leaveRepo.findOne({ where: { id, tenantId } });
         if (!leave)
-            throw new Error('Leave request not found');
+            throw new common_1.NotFoundException('Leave request not found');
         if (leave.status !== leave_entity_1.LeaveStatus.PENDING)
-            throw new Error(`Cannot approve leave with status: ${leave.status}`);
+            throw new common_1.BadRequestException(`Cannot approve leave with status: ${leave.status}`);
         await this.leaveRepo.update({ id, tenantId }, { status: leave_entity_1.LeaveStatus.APPROVED, approvedBy: approverId, approvedAt: new Date() });
         return this.leaveRepo.findOne({ where: { id, tenantId } });
     }
     async rejectLeave(tenantId, id, reason) {
         const leave = await this.leaveRepo.findOne({ where: { id, tenantId } });
         if (!leave)
-            throw new Error('Leave request not found');
+            throw new common_1.NotFoundException('Leave request not found');
         if (leave.status !== leave_entity_1.LeaveStatus.PENDING)
-            throw new Error(`Cannot reject leave with status: ${leave.status}`);
+            throw new common_1.BadRequestException(`Cannot reject leave with status: ${leave.status}`);
         if (!reason?.trim())
-            throw new Error('Rejection reason is required');
+            throw new common_1.BadRequestException('Rejection reason is required');
         await this.leaveRepo.update({ id, tenantId }, { status: leave_entity_1.LeaveStatus.REJECTED, rejectionReason: reason });
         return this.leaveRepo.findOne({ where: { id, tenantId } });
     }
@@ -166,7 +169,7 @@ let HrService = class HrService {
     async updatePayrollItem(tenantId, itemId, dto) {
         const item = await this.itemRepo.findOne({ where: { id: itemId, tenantId } });
         if (!item)
-            throw new Error('Payroll item not found');
+            throw new common_1.NotFoundException('Payroll item not found');
         const overtimePay = dto.overtimePay ?? Number(item.overtimePay);
         const bonuses = dto.bonuses ?? item.bonuses;
         const deductions = dto.deductions ?? item.deductions;
@@ -174,9 +177,11 @@ let HrService = class HrService {
         const totalDeductions = deductions.reduce((s, d) => s + Number(d.amount), 0);
         const netPay = Number(item.basicSalary) + overtimePay + totalBonuses - totalDeductions;
         await this.itemRepo.update({ id: itemId, tenantId }, { overtimePay, bonuses, deductions, totalBonuses, totalDeductions, netPay });
-        const allItems = await this.itemRepo.find({ where: { tenantId, runId: item.runId } });
-        const totalNetPay = allItems.reduce((s, i) => s + (i.id === itemId ? netPay : Number(i.netPay)), 0);
-        await this.runRepo.update({ id: item.runId }, { totalNetPay });
+        const runTotal = await this.itemRepo.createQueryBuilder('i')
+            .select('SUM(i.net_pay)', 'total')
+            .where('i.tenant_id = :tenantId AND i.run_id = :runId', { tenantId, runId: item.runId })
+            .getRawOne();
+        await this.runRepo.update({ id: item.runId }, { totalNetPay: Number(runTotal?.total ?? 0) });
         return this.itemRepo.findOne({ where: { id: itemId, tenantId } });
     }
     getPayrollItems(tenantId, runId) {
@@ -225,12 +230,12 @@ let HrService = class HrService {
         if (!record)
             throw new common_1.NotFoundException('No clock-in record found for today. Please clock in first.');
         if (!record.checkIn)
-            throw new Error('Clock-in time not recorded. Cannot calculate working hours.');
+            throw new common_1.BadRequestException('Clock-in time not recorded. Cannot calculate working hours.');
         const checkOut = new Date();
         const checkIn = new Date(record.checkIn);
         const diffMs = checkOut.getTime() - checkIn.getTime();
         if (diffMs < 0)
-            throw new Error('Clock-out time cannot be before clock-in time.');
+            throw new common_1.BadRequestException('Clock-out time cannot be before clock-in time.');
         const workingHours = Math.round((diffMs / 3600000) * 100) / 100;
         const overtimeHours = Math.max(0, Math.round((workingHours - 8) * 100) / 100);
         await this.attRepo.update({ id: record.id }, { checkOut, workingHours, overtimeHours, location });
@@ -246,6 +251,46 @@ let HrService = class HrService {
         await this.leaveTypeRepo.update({ id, tenantId }, dto);
         return this.leaveTypeRepo.findOne({ where: { id, tenantId } });
     }
+    async generatePayslips(tenantId, runId) {
+        const items = await this.itemRepo.find({ where: { tenantId, runId } });
+        const run = await this.runRepo.findOne({ where: { id: runId, tenantId } });
+        if (!run)
+            throw new common_1.NotFoundException('Payroll run not found');
+        const payslips = items.map(item => this.payslipRepo.create({
+            tenantId, payrollItemId: item.id, employeeId: item.employeeId,
+            payPeriod: run.payPeriod, basicSalary: item.basicSalary,
+            overtimePay: item.overtimePay, bonuses: item.bonuses,
+            deductions: item.deductions, netPay: item.netPay,
+            createdBy: run.createdBy ?? tenantId,
+        }));
+        return this.payslipRepo.save(payslips);
+    }
+    getPayslips(tenantId, employeeId) {
+        return this.payslipRepo.find({ where: { tenantId, employeeId }, order: { payPeriod: 'DESC' } });
+    }
+    async getHRAnalytics(tenantId) {
+        const [totalEmployees, activeEmployees, onLeave, terminated] = await Promise.all([
+            this.empRepo.count({ where: { tenantId } }),
+            this.empRepo.count({ where: { tenantId, status: 'active' } }),
+            this.empRepo.count({ where: { tenantId, status: 'on_leave' } }),
+            this.empRepo.count({ where: { tenantId, status: 'terminated' } }),
+        ]);
+        const payrollCost = await this.itemRepo.createQueryBuilder('i')
+            .select('SUM(i.net_pay)', 'total').where('i.tenant_id = :tenantId', { tenantId }).getRawOne();
+        const deptBreakdown = await this.empRepo.createQueryBuilder('e')
+            .leftJoin('departments', 'd', 'd.id = e.department_id')
+            .select('e.department_id', 'departmentId')
+            .addSelect('COALESCE(d.name, \'Unassigned\')', 'departmentName')
+            .addSelect('COUNT(*)', 'count')
+            .where('e.tenant_id = :tenantId AND e.deleted_at IS NULL', { tenantId })
+            .groupBy('e.department_id').addGroupBy('d.name')
+            .getRawMany();
+        const overtimeHours = await this.attRepo.createQueryBuilder('a')
+            .select('SUM(a.overtime_hours)', 'total').where('a.tenant_id = :tenantId', { tenantId }).getRawOne();
+        const activeAndTerminated = activeEmployees + terminated;
+        const turnoverRate = activeAndTerminated > 0 ? Math.round((terminated / activeAndTerminated) * 100) : 0;
+        return { totalEmployees, activeEmployees, onLeave, terminated, turnoverRate, totalPayrollCost: Number(payrollCost?.total ?? 0), deptBreakdown, totalOvertimeHours: Number(overtimeHours?.total ?? 0) };
+    }
 };
 exports.HrService = HrService;
 exports.HrService = HrService = __decorate([
@@ -259,7 +304,9 @@ exports.HrService = HrService = __decorate([
     __param(6, (0, typeorm_1.InjectRepository)(job_posting_entity_1.JobPosting)),
     __param(7, (0, typeorm_1.InjectRepository)(job_posting_entity_1.Applicant)),
     __param(8, (0, typeorm_1.InjectRepository)(leave_type_entity_1.LeaveType)),
+    __param(9, (0, typeorm_1.InjectRepository)(payslip_entity_1.Payslip)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,

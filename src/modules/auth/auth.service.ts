@@ -11,6 +11,8 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { User, UserStatus } from '../users/entities/user.entity';
 import { Tenant, TenantStatus } from '../tenants/entities/tenant.entity';
+import { Subscription } from '../billing/entities/subscription.entity';
+import { Plan } from '../billing/entities/plan.entity';
 import { LoginDto, RegisterTenantDto } from './dto/auth.dto';
 import {
   JwtPayload,
@@ -25,6 +27,10 @@ export class AuthService {
     private userRepo: Repository<User>,
     @InjectRepository(Tenant)
     private tenantRepo: Repository<Tenant>,
+    @InjectRepository(Subscription)
+    private subRepo: Repository<Subscription>,
+    @InjectRepository(Plan)
+    private planRepo: Repository<Plan>,
     private jwtService: JwtService,
     private configService: ConfigService,
     private dataSource: DataSource,
@@ -94,7 +100,6 @@ export class AuthService {
   async refreshToken(userId: string, refreshToken?: string) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new UnauthorizedException('User not found');
-    // If refresh token provided, validate it
     if (refreshToken && user.refreshTokenHash) {
       const valid = await bcrypt.compare(refreshToken, user.refreshTokenHash);
       if (!valid) throw new UnauthorizedException('Invalid refresh token');
@@ -102,29 +107,78 @@ export class AuthService {
     return this.generateTokens(user);
   }
 
+  async refreshFromToken(refreshToken: string) {
+    let payload: { sub: string };
+    try {
+      payload = this.jwtService.verify(refreshToken, {
+        secret: this.configService.get('JWT_REFRESH_SECRET'),
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+    const user = await this.userRepo.findOne({ where: { id: payload.sub } });
+    if (!user) throw new UnauthorizedException('User not found');
+    if (user.refreshTokenHash) {
+      const valid = await bcrypt.compare(refreshToken, user.refreshTokenHash);
+      if (!valid) throw new UnauthorizedException('Refresh token has been revoked');
+    }
+    return this.generateTokens(user);
+  }
+
   async forgotPassword(email: string) {
-    // In production: generate reset token, send email
-    // For now: return a mock token for development
     const user = await this.userRepo.findOne({ where: { email } });
-    if (!user) return { message: 'If email exists, reset link sent' };
-    const resetToken = Buffer.from(`${user.id}:${Date.now()}`).toString('base64');
-    return { message: 'Reset link sent', resetToken }; // remove resetToken in prod
+    // Always return same message to prevent email enumeration
+    if (!user) return { message: 'If that email exists, a reset link has been sent.' };
+    // Generate a secure token: sign a short-lived JWT
+    const resetToken = this.jwtService.sign(
+      { sub: user.id, purpose: 'password_reset' },
+      { secret: this.configService.get('JWT_SECRET'), expiresIn: '1h' },
+    );
+    // In production: send email with resetToken link
+    // For development: log to console only
+    if (this.configService.get('NODE_ENV') !== 'production') {
+      console.log(`[DEV] Password reset token for ${email}: ${resetToken}`);
+    }
+    return { message: 'If that email exists, a reset link has been sent.' };
   }
 
   async resetPassword(token: string, newPassword: string) {
-    const decoded = Buffer.from(token, 'base64').toString('utf-8');
-    const [userId] = decoded.split(':');
+    let payload: any;
+    try {
+      payload = this.jwtService.verify(token, { secret: this.configService.get('JWT_SECRET') });
+    } catch {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+    if (payload.purpose !== 'password_reset') {
+      throw new BadRequestException('Invalid token purpose');
+    }
+    if (newPassword.length < 8) {
+      throw new BadRequestException('Password must be at least 8 characters');
+    }
     const hash = await bcrypt.hash(newPassword, 12);
-    await this.userRepo.update(userId, { passwordHash: hash, refreshTokenHash: null });
+    await this.userRepo.update(payload.sub, { passwordHash: hash, refreshTokenHash: null });
     return { message: 'Password reset successful' };
   }
 
   private async generateTokens(user: User, tenant?: Tenant) {
+    // Fetch plan tier from active subscription
+    let planTier: PlanTier | null = null;
+    if (user.tenantId) {
+      const sub = await this.subRepo.createQueryBuilder('s')
+        .innerJoin('plans', 'p', 'p.id = s.plan_id')
+        .select('p.tier', 'tier')
+        .where('s.tenant_id = :tid', { tid: user.tenantId })
+        .orderBy('s.created_at', 'DESC')
+        .limit(1)
+        .getRawOne();
+      planTier = (sub?.tier as PlanTier) ?? null;
+    }
+
     const payload: JwtPayload = {
       sub: user.id,
       tenantId: user.tenantId,
       role: user.role,
-      planTier: null, // TODO: fetch from subscription
+      planTier,
       isSuperAdmin: user.isSuperAdmin,
       email: user.email,
     };
