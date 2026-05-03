@@ -21,8 +21,8 @@ export class TaxRate extends TenantBaseEntity {
 
 @Entity('expense_claims')
 export class ExpenseClaim extends TenantBaseEntity {
-  @Column({ name: 'employee_id', type: 'uuid' })
-  employeeId: string;
+  @Column({ name: 'employee_id', type: 'uuid', nullable: true })
+  employeeId: string | null;
 
   @Column({ length: 200 })
   title: string;

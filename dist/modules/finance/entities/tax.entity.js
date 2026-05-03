@@ -57,8 +57,8 @@ let ExpenseClaim = class ExpenseClaim extends base_entity_1.TenantBaseEntity {
 };
 exports.ExpenseClaim = ExpenseClaim;
 __decorate([
-    (0, typeorm_1.Column)({ name: 'employee_id', type: 'uuid' }),
-    __metadata("design:type", String)
+    (0, typeorm_1.Column)({ name: 'employee_id', type: 'uuid', nullable: true }),
+    __metadata("design:type", Object)
 ], ExpenseClaim.prototype, "employeeId", void 0);
 __decorate([
     (0, typeorm_1.Column)({ length: 200 }),

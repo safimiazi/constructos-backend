@@ -19,7 +19,7 @@ export class AuditInterceptor implements NestInterceptor {
       path: string;
       user?: { id: string; tenantId: string };
     }>();
-    const { method, path, user } = req;
+    const { method, path } = req;
 
     if (
       !['POST', 'PATCH', 'DELETE'].includes(method) ||

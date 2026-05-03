@@ -7,7 +7,7 @@ export declare class TaxRate extends TenantBaseEntity {
     description: string | null;
 }
 export declare class ExpenseClaim extends TenantBaseEntity {
-    employeeId: string;
+    employeeId: string | null;
     title: string;
     amount: number;
     date: Date;

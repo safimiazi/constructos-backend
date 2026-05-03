@@ -31,6 +31,11 @@ export class UsersController {
     return this.svc.invite(u.tenantId!, dto);
   }
 
+  // Custom Roles — must be before :id routes
+  @Get('roles') getRoles(@CurrentUser() u: JwtPayload) { return this.svc.findRoles(u.tenantId!); }
+  @Post('roles') createRole(@CurrentUser() u: JwtPayload, @Body() dto: any) { return this.svc.createRole(u.tenantId!, u.sub, dto); }
+  @Patch('roles/:id') updateRole(@CurrentUser() u: JwtPayload, @Param('id') id: string, @Body() dto: any) { return this.svc.updateRole(u.tenantId!, id, dto); }
+
   @Get(':id')
   findOne(@CurrentUser() u: JwtPayload, @Param('id') id: string) {
     return this.svc.findOne(u.tenantId!, id);
@@ -46,9 +51,4 @@ export class UsersController {
   remove(@CurrentUser() u: JwtPayload, @Param('id') id: string) {
     return this.svc.remove(u.tenantId!, id);
   }
-
-  // Custom Roles
-  @Get('roles') getRoles(@CurrentUser() u: JwtPayload) { return this.svc.findRoles(u.tenantId!); }
-  @Post('roles') createRole(@CurrentUser() u: JwtPayload, @Body() dto: any) { return this.svc.createRole(u.tenantId!, u.sub, dto); }
-  @Patch('roles/:id') updateRole(@CurrentUser() u: JwtPayload, @Param('id') id: string, @Body() dto: any) { return this.svc.updateRole(u.tenantId!, id, dto); }
 }
